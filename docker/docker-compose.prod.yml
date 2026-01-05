@@ -1,0 +1,87 @@
+name: iot
+
+services:
+  backend:
+    container_name: backend
+    build:
+      context: ../backend/
+      dockerfile: Dockerfile
+      target: base
+    deploy:
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 3
+        window: 120s
+    expose:
+      - "3001"
+    command: ["npm", "run", "dev"]
+    depends_on:
+      - db
+    env_file:
+      - ../config/environment-variables/.env.backend.prod
+    volumes:
+      - ../backend/src:/usr/src/app/src
+    configs:
+      - source: backend_nodemon
+        target: /usr/src/app/nodemon.json
+    networks:
+      - internal
+
+  db:
+    container_name: db
+    image: timescale/timescaledb:latest-pg17
+    deploy:
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 3
+        window: 120s
+    expose:
+      - "5432"
+    ports:
+      - 5432:5432
+    env_file:
+      - ../config/environment-variables/.env.db.prod
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - internal
+
+  reverse-proxy:
+    container_name: reverse-proxy
+    build:
+      context: ..
+      dockerfile: docker/nginx.Dockerfile
+    deploy:
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 3
+        window: 120s
+    ports:
+      - 80:80
+    depends_on:
+      - backend
+    configs:
+      - source: nginx_config
+        target: /etc/nginx/nginx.conf
+    networks:
+      - public
+      - internal
+
+networks:
+  public:
+    driver: bridge
+  internal:
+    name: internal
+    internal: true
+
+volumes:
+  postgres_data: {}
+
+configs:
+  nginx_config:
+    file: ../config/nginx.conf.prod
+  backend_nodemon:
+    file: ../backend/nodemon.json

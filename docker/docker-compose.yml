@@ -1,0 +1,90 @@
+name: IOT
+
+services:
+  frontend:
+    container_name: frontend
+    build:
+      context: ../frontend/
+      dockerfile: Dockerfile
+      target: dev
+    volumes:
+      - ../frontend/:/usr/src/app
+      - /usr/src/app/node_modules
+    ports:
+      - "3000:3000"
+    depends_on:
+      - "backend"
+    command: npm run dev
+    env_file:
+      - ../config/environment-variables/.env.frontend.dev
+    networks:
+      - internal
+      - public
+  
+  backend:
+    container_name: backend
+    build:
+      context: ../backend/
+      dockerfile: Dockerfile
+      target: base
+    expose:
+      - "3001"
+    command: ["npm", "run", "dev"]
+    depends_on:
+      - db
+    env_file:
+      - ../config/environment-variables/.env.backend.dev
+    volumes:
+      - ../backend/src:/usr/src/app/src
+    configs:
+      - source: backend_nodemon
+        target: /usr/src/app/nodemon.json
+    networks:
+      - internal
+
+  db:
+    container_name: db
+    image: timescale/timescaledb:latest-pg17
+    expose:
+      - "5432"
+    ports:
+      - 5432:5432
+    env_file:
+      - ../config/environment-variables/.env.db.dev
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - public
+      - internal
+
+  reverse-proxy:
+    container_name: reverse-proxy
+    build:
+      context: ..
+      dockerfile: docker/nginx.Dockerfile
+    ports:
+      - 80:80
+    depends_on:
+      - backend
+    configs:
+      - source: nginx_config
+        target: /etc/nginx/nginx.conf
+    networks:
+      - public
+      - internal
+
+networks:
+  public:
+    driver: bridge
+  internal:
+    name: internal
+    internal: true
+
+volumes:
+  postgres_data: {}
+
+configs:
+  nginx_config:
+    file: ../config/nginx.conf
+  backend_nodemon:
+    file: ../backend/nodemon.json
