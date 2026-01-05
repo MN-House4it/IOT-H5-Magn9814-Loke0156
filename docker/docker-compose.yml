@@ -1,12 +1,33 @@
-name: IOT
+name: iotbigdata
 
 services:
+  clickhouse:
+    container_name: clickhouse
+    image: yandex/clickhouse-server:latest
+    expose:
+      - "9000"
+      - "8123"
+    ports:
+      - 9000:9000
+      - 8123:8123
+    env_file:
+      - ../config/environment-variables/.env.clickhouse.dev
+    environment:
+      - CLICKHOUSE_USER=admin
+      - CLICKHOUSE_PASSWORD=Admin1234
+      - CLICKHOUSE_DB=iot_data
+
+    volumes:
+      - clickhouse_data:/var/lib/clickhouse/data
+    networks:
+      - public
+      - internal
   frontend:
     container_name: frontend
     build:
       context: ../frontend/
       dockerfile: Dockerfile
-      target: dev
+      target: base
     volumes:
       - ../frontend/:/usr/src/app
       - /usr/src/app/node_modules
@@ -19,8 +40,7 @@ services:
       - ../config/environment-variables/.env.frontend.dev
     networks:
       - internal
-      - public
-  
+
   backend:
     container_name: backend
     build:
@@ -42,6 +62,35 @@ services:
     networks:
       - internal
 
+  mqtt5:
+    container_name: mqtt5
+    build:
+      context: ..
+      dockerfile: docker/mosquitto.Dockerfile
+    expose:
+      - 1883 # Plain MQTT
+      - 8883 # Secure MQTT (TLS)
+      - 8080 # Secure MQTT (TLS) v2
+      - 9001 # WebSocket (optional)
+      - 9443 # Secure WebSocket (optional)
+      - 80 # Certbot
+    depends_on:
+      - reverse-proxy
+    env_file:
+      - ../config/environment-variables/.env.mqtt.dev
+    volumes:
+      - mqtt-data:/mosquitto/data:rw
+      - mqtt-log:/mosquitto/log:rw
+      # - cert-link:/etc/letsencrypt/live
+      # - cert-config:/etc/letsencrypt/renewal
+      # - cert:/etc/letsencrypt/archive
+    configs:
+      - source: mosquitto_config
+        target: /mosquitto/config/mosquitto.conf
+    networks:
+      - internal
+      - public
+
   db:
     container_name: db
     image: timescale/timescaledb:latest-pg17
@@ -57,21 +106,48 @@ services:
       - public
       - internal
 
+  grafana:
+    container_name: grafana
+    image: grafana/grafana:main
+    expose:
+      - 9200:9200
+    depends_on:
+      - db
+    env_file:
+      - ../config/environment-variables/.env.grafana.dev
+    volumes:
+      - ../config/grafana/defaults.ini:/usr/share/grafana/conf/defaults.ini
+      - ../config/grafana/datasources.yml:/etc/grafana/provisioning/datasources/datasources.yml
+      - ../config/grafana/main.yml:/etc/grafana/provisioning/dashboards/main.yml
+      - ../config/grafana/dashboards/:/var/lib/grafana/dashboards/
+      - grafana-data:/var/lib/grafana
+    networks:
+      - internal
+      - public
+
   reverse-proxy:
     container_name: reverse-proxy
     build:
       context: ..
       dockerfile: docker/nginx.Dockerfile
     ports:
+      - 443:443
       - 80:80
+      - 8080:8080
+      - 1883:1883
     depends_on:
       - backend
+      - grafana
+    env_file:
+      - ../config/environment-variables/.env.nginx.dev
     configs:
       - source: nginx_config
         target: /etc/nginx/nginx.conf
+      - source: nginx_stream_config
+        target: /etc/nginx/conf.d/01-mqtt.stream
     networks:
-      - public
       - internal
+      - public
 
 networks:
   public:
@@ -82,9 +158,20 @@ networks:
 
 volumes:
   postgres_data: {}
+  mqtt-data: {}
+  mqtt-log: {}
+  grafana-data: {}
+  clickhouse_data: {}
+  # cert-link: {}
+  # cert: {}
+  # cert-config: {}
 
 configs:
   nginx_config:
     file: ../config/nginx.conf
+  nginx_stream_config:
+    file: ../config/01-mqtt.stream
+  mosquitto_config:
+    file: ../config/mosquitto.dev.conf
   backend_nodemon:
     file: ../backend/nodemon.json
