@@ -99,8 +99,7 @@ services:
       - 1883:1883
     depends_on:
       - backend
-      - grafana
-      - clickhouse
+      # - grafana
     env_file:
       - ../config/environment-variables/.env.nginx.dev
     configs:
