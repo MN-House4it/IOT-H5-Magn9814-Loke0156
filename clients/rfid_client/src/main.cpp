@@ -20,8 +20,6 @@ void setup()
 {
   Serial.begin(115200);
 
-  Serial.println("Test");
-
   while (!Serial) { delay(10); }
 
   Wire.begin();               // Uno: SDA/SCL are the I2C pins (also on A4/A5 on classic Uno)
