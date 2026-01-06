@@ -1,46 +1,7 @@
-name: iotbigdata
 
+name: IOT
 services:
-  clickhouse:
-    container_name: clickhouse
-    image: yandex/clickhouse-server:latest
-    expose:
-      - "9000"
-      - "8123"
-    ports:
-      - 9000:9000
-      - 8123:8123
-    env_file:
-      - ../config/environment-variables/.env.clickhouse.dev
-    environment:
-      - CLICKHOUSE_USER=admin
-      - CLICKHOUSE_PASSWORD=Admin1234
-      - CLICKHOUSE_DB=iot_data
-
-    volumes:
-      - clickhouse_data:/var/lib/clickhouse/data
-    networks:
-      - public
-      - internal
-  frontend:
-    container_name: frontend
-    build:
-      context: ../frontend/
-      dockerfile: Dockerfile
-      target: base
-    volumes:
-      - ../frontend/:/usr/src/app
-      - /usr/src/app/node_modules
-    ports:
-      - "3000:3000"
-    depends_on:
-      - "backend"
-    command: npm run dev
-    env_file:
-      - ../config/environment-variables/.env.frontend.dev
-    networks:
-      - internal
-
+  
   backend:
     container_name: backend
     build:
@@ -62,6 +23,22 @@ services:
     networks:
       - internal
 
+  db:
+    container_name: db
+    image: timescale/timescaledb:latest-pg17
+    expose:
+      - "5432"
+    ports:
+      - 5432:5432
+    env_file:
+      - ../config/environment-variables/.env.db.dev
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - public
+      - internal
+
+  
   mqtt5:
     container_name: mqtt5
     build:
@@ -91,21 +68,6 @@ services:
       - internal
       - public
 
-  db:
-    container_name: db
-    image: timescale/timescaledb:latest-pg17
-    expose:
-      - "5432"
-    ports:
-      - 5432:5432
-    env_file:
-      - ../config/environment-variables/.env.db.dev
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-    networks:
-      - public
-      - internal
-
   grafana:
     container_name: grafana
     image: grafana/grafana:main
@@ -125,29 +87,22 @@ services:
       - internal
       - public
 
+
   reverse-proxy:
     container_name: reverse-proxy
     build:
       context: ..
       dockerfile: docker/nginx.Dockerfile
     ports:
-      - 443:443
       - 80:80
-      - 8080:8080
-      - 1883:1883
     depends_on:
       - backend
-      - grafana
-    env_file:
-      - ../config/environment-variables/.env.nginx.dev
     configs:
       - source: nginx_config
         target: /etc/nginx/nginx.conf
-      - source: nginx_stream_config
-        target: /etc/nginx/conf.d/01-mqtt.stream
     networks:
-      - internal
       - public
+      - internal
 
 networks:
   public:
@@ -158,20 +113,9 @@ networks:
 
 volumes:
   postgres_data: {}
-  mqtt-data: {}
-  mqtt-log: {}
-  grafana-data: {}
-  clickhouse_data: {}
-  # cert-link: {}
-  # cert: {}
-  # cert-config: {}
 
 configs:
   nginx_config:
     file: ../config/nginx.conf
-  nginx_stream_config:
-    file: ../config/01-mqtt.stream
-  mosquitto_config:
-    file: ../config/mosquitto.dev.conf
   backend_nodemon:
     file: ../backend/nodemon.json
