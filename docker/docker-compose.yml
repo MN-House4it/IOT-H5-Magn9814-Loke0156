@@ -1,7 +1,27 @@
+name: iotbigdata
 
-name: IOT
 services:
-  
+
+  # grafana:
+  #   container_name: grafana
+  #   image: grafana/grafana:main
+  #   expose:
+  #     - 9200:9200
+  #   depends_on:
+  #     - db
+  #     - clickhouse
+  #   env_file:
+  #     - ../config/environment-variables/.env.grafana.dev
+  #   volumes:
+  #     - ../config/grafana/defaults.ini:/usr/share/grafana/conf/defaults.ini
+  #     - ../config/grafana/datasources.yml:/etc/grafana/provisioning/datasources/datasources.yml
+  #     - ../config/grafana/main.yml:/etc/grafana/provisioning/dashboards/main.yml
+  #     - ../config/grafana/dashboards/:/var/lib/grafana/dashboards/
+  #     - grafana-data:/var/lib/grafana
+  #   networks:
+  #     - internal
+  #     - public
+
   backend:
     container_name: backend
     build:
@@ -23,22 +43,6 @@ services:
     networks:
       - internal
 
-  db:
-    container_name: db
-    image: timescale/timescaledb:latest-pg17
-    expose:
-      - "5432"
-    ports:
-      - 5432:5432
-    env_file:
-      - ../config/environment-variables/.env.db.dev
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-    networks:
-      - public
-      - internal
-
-  
   mqtt5:
     container_name: mqtt5
     build:
@@ -68,24 +72,20 @@ services:
       - internal
       - public
 
-  # grafana:
-  #   container_name: grafana
-  #   image: grafana/grafana:main
-  #   expose:
-  #     - 9200:9200
-  #   depends_on:
-  #     - db
-  #   env_file:
-  #     - ../config/environment-variables/.env.grafana.dev
-  #   volumes:
-  #     - ../config/grafana/defaults.ini:/usr/share/grafana/conf/defaults.ini
-  #     - ../config/grafana/datasources.yml:/etc/grafana/provisioning/datasources/datasources.yml
-  #     - ../config/grafana/main.yml:/etc/grafana/provisioning/dashboards/main.yml
-  #     - ../config/grafana/dashboards/:/var/lib/grafana/dashboards/
-  #     - grafana-data:/var/lib/grafana
-  #   networks:
-  #     - internal
-  #     - public
+  db:
+    container_name: db
+    image: timescale/timescaledb:latest-pg17
+    expose:
+      - "5432"
+    ports:
+      - 5432:5432
+    env_file:
+      - ../config/environment-variables/.env.db.dev
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - public
+      - internal
 
   reverse-proxy:
     container_name: reverse-proxy
@@ -93,15 +93,24 @@ services:
       context: ..
       dockerfile: docker/nginx.Dockerfile
     ports:
+      - 443:443
       - 80:80
+      - 8080:8080
+      - 1883:1883
     depends_on:
       - backend
+      - grafana
+      - clickhouse
+    env_file:
+      - ../config/environment-variables/.env.nginx.dev
     configs:
       - source: nginx_config
         target: /etc/nginx/nginx.conf
+      - source: nginx_stream_config
+        target: /etc/nginx/conf.d/01-mqtt.stream
     networks:
-      - public
       - internal
+      - public
 
 networks:
   public:
@@ -112,9 +121,19 @@ networks:
 
 volumes:
   postgres_data: {}
+  mqtt-data: {}
+  mqtt-log: {}
+  # grafana-data: {}
+  # cert-link: {}
+  # cert: {}
+  # cert-config: {}
 
 configs:
   nginx_config:
     file: ../config/nginx.conf
+  nginx_stream_config:
+    file: ../config/01-mqtt.stream
+  mosquitto_config:
+    file: ../config/mosquitto.dev.conf
   backend_nodemon:
     file: ../backend/nodemon.json
