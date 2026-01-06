@@ -68,25 +68,24 @@ services:
       - internal
       - public
 
-  grafana:
-    container_name: grafana
-    image: grafana/grafana:main
-    expose:
-      - 9200:9200
-    depends_on:
-      - db
-    env_file:
-      - ../config/environment-variables/.env.grafana.dev
-    volumes:
-      - ../config/grafana/defaults.ini:/usr/share/grafana/conf/defaults.ini
-      - ../config/grafana/datasources.yml:/etc/grafana/provisioning/datasources/datasources.yml
-      - ../config/grafana/main.yml:/etc/grafana/provisioning/dashboards/main.yml
-      - ../config/grafana/dashboards/:/var/lib/grafana/dashboards/
-      - grafana-data:/var/lib/grafana
-    networks:
-      - internal
-      - public
-
+  # grafana:
+  #   container_name: grafana
+  #   image: grafana/grafana:main
+  #   expose:
+  #     - 9200:9200
+  #   depends_on:
+  #     - db
+  #   env_file:
+  #     - ../config/environment-variables/.env.grafana.dev
+  #   volumes:
+  #     - ../config/grafana/defaults.ini:/usr/share/grafana/conf/defaults.ini
+  #     - ../config/grafana/datasources.yml:/etc/grafana/provisioning/datasources/datasources.yml
+  #     - ../config/grafana/main.yml:/etc/grafana/provisioning/dashboards/main.yml
+  #     - ../config/grafana/dashboards/:/var/lib/grafana/dashboards/
+  #     - grafana-data:/var/lib/grafana
+  #   networks:
+  #     - internal
+  #     - public
 
   reverse-proxy:
     container_name: reverse-proxy
