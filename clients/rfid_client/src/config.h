@@ -15,7 +15,7 @@ static const char* MQTT_PASS = "Admin1234!";
 
 // ---------------- Topics ----------------
 static const char* MQTT_TOPIC_UID    = "rfid/uid";
-static const char* MQTT_TOPIC_STATUS = "rfid/status";
+static const char* MQTT_TOPIC_STATUS = "device-status";
 
 // ---------------- Behavior ----------------
 static const bool MQTT_RETAIN_UID = true;      // retain last UID on broker
