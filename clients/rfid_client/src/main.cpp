@@ -40,6 +40,30 @@ static String getUniqueID()
     return id;
 }
 
+static String buildJsonPayload(const String& deviceId, const String& uid)
+{
+  String json;
+  json += "{\n";
+  json += "  \"deviceId\": \"";
+  json += deviceId;
+  json += "\",\n  \"rfidUid\": \"";
+  json += uid;
+  json += "\"\n}";
+  return json;
+}
+
+static String buildStatusJson(const String& deviceId, const String& status)
+{
+  String json;
+  json += "{\n";
+  json += "  \"deviceId\": \"";
+  json += deviceId;
+  json += "\",\n  \"status\": \"";
+  json += status;
+  json += "\"\n}";
+  return json;
+}
+
 static void ensureWiFi()
 {
   if (WiFi.status() == WL_CONNECTED) return;
@@ -80,7 +104,11 @@ static void ensureMQTT(const String& deviceName)
 
     if (ok) {
       Serial.println("connected!");
-      mqtt.publish(MQTT_TOPIC_STATUS, "online", true);
+      String statusPayload = buildStatusJson(deviceName, "online");
+      mqtt.publish(MQTT_TOPIC_STATUS, statusPayload.c_str(), true);
+
+      Serial.print("MQTT status payload: ");
+      Serial.println(statusPayload);
     } else {
       Serial.print("failed, rc=");
       Serial.print(mqtt.state());
@@ -101,19 +129,6 @@ static String uidToString()
   s.toUpperCase();
   return s;
 }
-
-static String buildJsonPayload(const String& deviceId, const String& uid)
-{
-  String json;
-  json += "{\n";
-  json += "  \"deviceId\": \"";
-  json += deviceId;
-  json += "\",\n  \"rfidUid\": \"";
-  json += uid;
-  json += "\"\n}";
-  return json;
-}
-
 
 void setup()
 {
