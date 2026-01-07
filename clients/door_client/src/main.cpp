@@ -14,6 +14,10 @@ PubSubClient mqtt(wifiClient);
 static uint32_t ledEndTimeMs = 0; // When LED should turn off
 static bool ledActive = false;    // Current LED state
 
+// --- Button State ---
+static bool buttonPressed = false;    // Current button state
+static bool doorActionActive = false; // Whether door action was initiated
+
 // --- Helper Functions ---
 static bool mqttHasAuth()
 {
@@ -78,6 +82,28 @@ static void turnOffLED()
 {
   setLED(false);
   ledActive = false;
+}
+
+static void handleButtonPress()
+{
+  bool buttonCurrentlyPressed = digitalRead(BUTTON_PIN) == LOW; // LOW = pressed (active low)
+
+  // Button press detected
+  if (buttonCurrentlyPressed && !buttonPressed)
+  {
+    Serial.println("Button pressed - publishing 'close' to door/action");
+    mqtt.publish(MQTT_TOPIC_ACTION, "close", false);
+    doorActionActive = true;
+    buttonPressed = true;
+  }
+  // Button release detected
+  else if (!buttonCurrentlyPressed && buttonPressed)
+  {
+    Serial.println("Button released - publishing 'open' to door/action");
+    mqtt.publish(MQTT_TOPIC_ACTION, "open", false);
+    doorActionActive = false;
+    buttonPressed = false;
+  }
 }
 
 static void mqttMessageCallback(char *topic, byte *payload, unsigned int length)
@@ -189,6 +215,9 @@ void setup()
   pinMode(LED_PIN, OUTPUT);
   setLED(false); // Start with LED off
 
+  // Setup Button pin as input with pull-up
+  pinMode(BUTTON_PIN, INPUT_PULLUP);
+
   mqtt.setServer(MQTT_HOST, MQTT_PORT);
   mqtt.setCallback(mqttMessageCallback);
 
@@ -209,6 +238,9 @@ void loop()
 
   ensureMQTT(deviceName);
   mqtt.loop();
+
+  // Handle button press/release
+  handleButtonPress();
 
   // Check if LED should turn off
   if (ledActive)
