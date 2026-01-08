@@ -24,6 +24,12 @@ const config: Config = {
   REFRESH_TOKEN_EXPIRATION: process.env.REFRESH_TOKEN_EXPIRATION || '1h',
   MAX_FAILED_LOGIN_ATTEMPTS: Number(process.env.MAX_FAILED_LOGIN_ATTEMPTS) || 5,
   ATTEMPT_WINDOW_MINUTES: Number(process.env.ATTEMPT_WINDOW_MINUTES) || 15,
+  MQTT_BROKER: process.env.MQTT_BROKER || 'mqtt://mqtt5:1883',
+  MQTT_USERNAME: process.env.MQTT_USERNAME || 'admin',
+  MQTT_PASSWORD: process.env.MQTT_PASSWORD || 'Admin1234!',
+  MQTT_STATUS_TOPIC: process.env.MQTT_TOPIC || 'device-status',
+  MQTT_RFID_KEY_TOPIC: process.env.MQTT_TOPIC || 'rfid/uid',
+
 };
 
 export default config;

@@ -2,10 +2,12 @@ import bodyParser from 'body-parser';
 import cors from 'cors';
 import { rateLimit } from 'express-rate-limit';
 import helmet from 'helmet';
+import mqtt, { MqttClient } from 'mqtt';
 import passport from 'passport';
 
 import app from '@app';
 import config from '@config';
+import { DeviceStatus, DeviceStatusMessage } from '@api-types/mqtt.types';
 import alertRoutes from '@routes/alert.routes';
 import authRoutes from '@routes/auth.routes';
 import deviceRoutes from '@routes/device.routes';
@@ -49,4 +51,63 @@ app.get('/health', (req, res) => {
 
 app.listen(config.PORT, () => {
   console.info(`Server is running on ${config.PORT}`);
+
+    console.info('MQTT Broker: ', config.MQTT_BROKER);
+
+  // MQTT Connection
+  const client: MqttClient = mqtt.connect(config.MQTT_BROKER, {
+    username: config.MQTT_USERNAME,
+    password: config.MQTT_PASSWORD,
+  });
+
+  client.on('connect', () => {
+  console.info('✅ Connected to MQTT Broker');
+
+  // Build status message using model
+  const statusMessage: DeviceStatusMessage = {
+    deviceId: 'Backend',
+    status: DeviceStatus.ONLINE,
+  };
+
+  // Publish online status
+  client.publish(
+      config.MQTT_STATUS_TOPIC,
+      JSON.stringify(statusMessage, null, 2),
+      { qos: 1, retain: true },
+      (err) => {
+        if (err) {
+          console.error('❌ Failed to publish status:', err);
+        } else {
+          console.info('📡 Server status published: ONLINE');
+        }
+      }
+    );
+    client.subscribe(config.MQTT_RFID_KEY_TOPIC, (err) => {
+      if (err) {
+        console.error('❌ MQTT RFID Key Subscription Error:', err);
+      } else {
+        console.info('🔑 Subscribed to RFID key topic:', config.MQTT_RFID_KEY_TOPIC);
+      }
+    });
+  });
+  /**
+ * 🔔 Listen for incoming MQTT messages
+ */
+client.on('message', (topic, message) => {
+  if (topic === config.MQTT_RFID_KEY_TOPIC) {
+    const payload = message.toString();
+
+    console.info('📥 RFID message received');
+    console.info('🧵 Topic:', topic);
+    console.info('📄 Raw payload:', payload);
+
+    // Optional: parse JSON if RFID sends JSON
+    try {
+      const parsed = JSON.parse(payload);
+      console.info('✅ Parsed RFID payload:', parsed);
+    } catch {
+      console.info('ℹ️ Payload is not JSON');
+    }
+  }
+});
 });
