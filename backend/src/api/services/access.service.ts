@@ -2,6 +2,7 @@ import argon2 from 'argon2';
 import { MqttClient } from 'mqtt';
 import prisma from '@prisma-instance';
 import { PendingSession } from '@api-types/mqtt.types';
+import { AccessStatus, IAccessLogData } from '@api-types/access.types';
 import config from '@config';
 
 /**
@@ -75,10 +76,25 @@ export async function processRfidScan(
         'IncorrectKeycard',
         STATE_TIMES.IncorrectKeycard,
       );
+      // Log invalid keycard attempt
+      await logAccessAttempt({
+        doorId: door.id,
+        keycardCode: rfidUid,
+        accessStatus: AccessStatus.INCORRECT_KEYCARD,
+        details: 'Keycard not found or not active',
+      });
       return;
     }
 
     console.info(`✅ Valid keycard found: ${rfidUid}`);
+
+    // Log valid keycard attempt
+    await logAccessAttempt({
+      doorId: door.id,
+      userKeycardId: userKeycard.id,
+      keycardCode: rfidUid,
+      accessStatus: AccessStatus.CORRECT_KEYCARD,
+    });
 
     // Step 3: Clear any existing session for this door
     if (pendingSessions.has(door.id)) {
@@ -153,6 +169,15 @@ export async function processPasswordInput(
       clearTimeout(session.timeoutHandle);
       pendingSessions.delete(door.id);
       publishMessage(client, keypadDeviceId, 'IncorrectPassword', STATE_TIMES.IncorrectPassword);
+      
+      // Log session timeout
+      await logAccessAttempt({
+        doorId: door.id,
+        userKeycardId: session.userKeycardId,
+        keycardCode: session.cardUid,
+        accessStatus: AccessStatus.SESSION_TIMEOUT,
+        details: 'Password entry timeout exceeded',
+      });
       return;
     }
 
@@ -176,16 +201,57 @@ export async function processPasswordInput(
         pendingSessions.delete(door.id);
         publishMessage(client, keypadDeviceId, 'AccessGranted', STATE_TIMES.AccessGranted);
 
+        // Log successful password verification
+        await logAccessAttempt({
+          doorId: door.id,
+          userKeycardId: session.userKeycardId,
+          keycardCode: session.cardUid,
+          accessStatus: AccessStatus.CORRECT_PASSWORD,
+        });
+
         // Trigger door unlock
         triggerDoorUnlock(client, door.doorlockDeviceId, config.MQTT_DOOR_OPEN_STATE_TIME);
+        
+        // Log access granted and door unlocked
+        await logAccessAttempt({
+          doorId: door.id,
+          userKeycardId: session.userKeycardId,
+          keycardCode: session.cardUid,
+          accessStatus: AccessStatus.ACCESS_GRANTED,
+        });
+
+        await logAccessAttempt({
+          doorId: door.id,
+          userKeycardId: session.userKeycardId,
+          keycardCode: session.cardUid,
+          accessStatus: AccessStatus.DOOR_UNLOCKED,
+        });
         return;
       }
 
       console.warn(`❌ Incorrect password for door: ${door.id}`);
       publishMessage(client, keypadDeviceId, 'IncorrectPassword', STATE_TIMES.IncorrectPassword);
+      
+      // Log incorrect password attempt
+      await logAccessAttempt({
+        doorId: door.id,
+        userKeycardId: session.userKeycardId,
+        keycardCode: session.cardUid,
+        accessStatus: AccessStatus.INCORRECT_PASSWORD,
+        details: 'Password verification failed',
+      });
     } catch (err) {
       console.error(`❌ Error verifying password with argon2:`, err);
       publishMessage(client, keypadDeviceId, 'IncorrectPassword', STATE_TIMES.IncorrectPassword);
+      
+      // Log password verification error
+      await logAccessAttempt({
+        doorId: door.id,
+        userKeycardId: session.userKeycardId,
+        keycardCode: session.cardUid,
+        accessStatus: AccessStatus.INCORRECT_PASSWORD,
+        details: `Password verification error: ${err instanceof Error ? err.message : 'Unknown error'}`,
+      });
     }
   } catch (error) {
     console.error('❌ Error processing password:', error);
@@ -242,4 +308,27 @@ export function cleanupAllSessions(): void {
     console.info(`🧹 Cleaned up session for door: ${doorId}`);
   }
   pendingSessions.clear();
+}
+
+/**
+ * Log access attempt to database
+ * Can be used for audit trails and statistics
+ */
+export async function logAccessAttempt(data: IAccessLogData): Promise<void> {
+  try {
+    const log = await prisma.accessLog.create({
+      data: {
+        doorId: data.doorId,
+        userKeycardId: data.userKeycardId,
+        keycardCode: data.keycardCode,
+        accessStatus: data.accessStatus,
+        details: data.details,
+      },
+    });
+
+    console.info(`📝 Access logged for door ${data.doorId} - Status: ${data.accessStatus}`);
+  } catch (error) {
+    console.error('❌ Error logging access attempt:', error);
+    // Don't throw - logging failures shouldn't block the access flow
+  }
 }

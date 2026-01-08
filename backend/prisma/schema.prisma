@@ -22,6 +22,16 @@ enum AlertType {
   INFO
 }
 
+enum AccessStatus {
+  CORRECT_KEYCARD
+  INCORRECT_KEYCARD
+  CORRECT_PASSWORD
+  INCORRECT_PASSWORD
+  SESSION_TIMEOUT
+  ACCESS_GRANTED
+  DOOR_UNLOCKED
+}
+
 model User {
   id        String   @id @default(uuid()) @db.Uuid
   initials  String
@@ -68,6 +78,7 @@ model Door {
   status           Status   @default(AWAITING)
 
   accessGrants UserKeycardDoor[]
+  accessLogs   AccessLog[]
 }
 
 model UserKeycardDoor {
@@ -79,4 +90,16 @@ model UserKeycardDoor {
 
   userKeycard UserKeycard @relation(fields: [userKeycardId], references: [id])
   door        Door        @relation(fields: [doorId], references: [id])
+}
+
+model AccessLog {
+  id              String       @id @default(uuid()) @db.Uuid
+  doorId          String       @db.Uuid
+  userKeycardId   String?      @db.Uuid
+  keycardCode     String?
+  accessStatus    AccessStatus
+  timestamp       DateTime     @default(now()) @db.Timestamptz()
+  details         String?      // Additional context (e.g., error messages)
+
+  door        Door         @relation(fields: [doorId], references: [id], onDelete: Cascade)
 }
