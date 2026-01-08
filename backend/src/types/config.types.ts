@@ -53,4 +53,7 @@ export interface Config {
   MQTT_PASSWORD: string;
   MQTT_STATUS_TOPIC: string;
   MQTT_RFID_KEY_TOPIC: string;
+  MQTT_KEYPAD_STATE_TOPIC: string;
+  MQTT_KEYPAD_PASSWORD_TOPIC: string;
+  MQTT_DOORLOCK_OPEN_TOPIC: string;
 }

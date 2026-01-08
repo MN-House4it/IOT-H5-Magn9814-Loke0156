@@ -7,7 +7,7 @@ import passport from 'passport';
 
 import app from '@app';
 import config from '@config';
-import { DeviceStatus, DeviceStatusMessage } from '@api-types/mqtt.types';
+import { DeviceStatus, DeviceStatusMessage, RfidKeyMessage, PasswordMessage } from '@api-types/mqtt.types';
 import alertRoutes from '@routes/alert.routes';
 import authRoutes from '@routes/auth.routes';
 import deviceRoutes from '@routes/device.routes';
@@ -16,6 +16,7 @@ import manageRoutes from '@routes/manage.routes';
 import profileRoutes from '@routes/profile.routes';
 import timeSeriesRoutes from '@routes/timeSeries.routes';
 import tsAlertsRoutes from '@routes/tsAlerts.routes';
+import { processRfidScan, processPasswordInput, cleanupAllSessions } from '@services/access.service';
 
 import './passport';
 
@@ -82,6 +83,8 @@ app.listen(config.PORT, () => {
         }
       }
     );
+    
+    // Subscribe to RFID key topic
     client.subscribe(config.MQTT_RFID_KEY_TOPIC, (err) => {
       if (err) {
         console.error('❌ MQTT RFID Key Subscription Error:', err);
@@ -89,25 +92,76 @@ app.listen(config.PORT, () => {
         console.info('🔑 Subscribed to RFID key topic:', config.MQTT_RFID_KEY_TOPIC);
       }
     });
+
+    // Subscribe to keypad password topic
+    client.subscribe(config.MQTT_KEYPAD_PASSWORD_TOPIC, (err) => {
+      if (err) {
+        console.error('❌ MQTT Keypad Password Subscription Error:', err);
+      } else {
+        console.info('🔐 Subscribed to keypad password topic:', config.MQTT_KEYPAD_PASSWORD_TOPIC);
+      }
+    });
   });
+
   /**
- * 🔔 Listen for incoming MQTT messages
- */
-client.on('message', (topic, message) => {
-  if (topic === config.MQTT_RFID_KEY_TOPIC) {
-    const payload = message.toString();
+   * 🔔 Listen for incoming MQTT messages
+   */
+  client.on('message', (topic, message) => {
+    if (topic === config.MQTT_RFID_KEY_TOPIC) {
+      const payload = message.toString();
 
-    console.info('📥 RFID message received');
-    console.info('🧵 Topic:', topic);
-    console.info('📄 Raw payload:', payload);
+      console.info('📥 RFID message received');
+      console.info('🧵 Topic:', topic);
+      console.info('📄 Raw payload:', payload);
 
-    // Optional: parse JSON if RFID sends JSON
-    try {
-      const parsed = JSON.parse(payload);
-      console.info('✅ Parsed RFID payload:', parsed);
-    } catch {
-      console.info('ℹ️ Payload is not JSON');
+      try {
+        const rfidMessage: RfidKeyMessage = JSON.parse(payload);
+        console.info('✅ Parsed RFID payload:', rfidMessage);
+        
+        // Process the RFID scan through the access control flow
+        processRfidScan(rfidMessage.rfidUid, rfidMessage.deviceId, client).catch((err) => {
+          console.error('Error in processRfidScan:', err);
+        });
+      } catch (err) {
+        console.warn('⚠️ Failed to parse RFID payload as JSON:', err);
+      }
+    } else if (topic === config.MQTT_KEYPAD_PASSWORD_TOPIC) {
+      const payload = message.toString();
+
+      console.info('📥 Keypad password message received');
+      console.info('🧵 Topic:', topic);
+      console.info('📄 Raw payload:', payload);
+
+      try {
+        const passwordMessage: PasswordMessage = JSON.parse(payload);
+        console.info('✅ Parsed password payload:', passwordMessage);
+        
+        // Process the password input through the access control flow
+        processPasswordInput(passwordMessage.input, passwordMessage.deviceId, client).catch((err) => {
+          console.error('Error in processPasswordInput:', err);
+        });
+      } catch (err) {
+        console.warn('⚠️ Failed to parse password payload as JSON:', err);
+      }
     }
-  }
-});
+  });
+
+  client.on('error', (err) => {
+    console.error('❌ MQTT Client Error:', err);
+  });
+
+  // Handle graceful shutdown
+  process.on('SIGINT', () => {
+    console.info('🛑 Shutting down gracefully...');
+    cleanupAllSessions();
+    client.end();
+    process.exit(0);
+  });
+
+  process.on('SIGTERM', () => {
+    console.info('🛑 Shutting down gracefully...');
+    cleanupAllSessions();
+    client.end();
+    process.exit(0);
+  });
 });

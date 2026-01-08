@@ -29,7 +29,9 @@ const config: Config = {
   MQTT_PASSWORD: process.env.MQTT_PASSWORD || 'Admin1234!',
   MQTT_STATUS_TOPIC: process.env.MQTT_TOPIC || 'device-status',
   MQTT_RFID_KEY_TOPIC: process.env.MQTT_TOPIC || 'rfid/uid',
-
+  MQTT_KEYPAD_STATE_TOPIC: process.env.MQTT_KEYPAD_STATE_TOPIC || 'keypad/state',
+  MQTT_KEYPAD_PASSWORD_TOPIC: process.env.MQTT_KEYPAD_PASSWORD_TOPIC || 'keypad/key',
+  MQTT_DOORLOCK_OPEN_TOPIC: process.env.MQTT_DOORLOCK_OPEN_TOPIC || 'doorlock/open',
 };
 
 export default config;
