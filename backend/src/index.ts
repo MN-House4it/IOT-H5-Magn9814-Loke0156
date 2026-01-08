@@ -110,10 +110,6 @@ app.listen(config.PORT, () => {
     if (topic === config.MQTT_RFID_KEY_TOPIC) {
       const payload = message.toString();
 
-      console.info('📥 RFID message received');
-      console.info('🧵 Topic:', topic);
-      console.info('📄 Raw payload:', payload);
-
       try {
         const rfidMessage: RfidKeyMessage = JSON.parse(payload);
         console.info('✅ Parsed RFID payload:', rfidMessage);
@@ -129,12 +125,9 @@ app.listen(config.PORT, () => {
       const payload = message.toString();
 
       console.info('📥 Keypad password message received');
-      console.info('🧵 Topic:', topic);
-      console.info('📄 Raw payload:', payload);
 
       try {
         const passwordMessage: PasswordMessage = JSON.parse(payload);
-        console.info('✅ Parsed password payload:', passwordMessage);
         
         // Process the password input through the access control flow
         processPasswordInput(passwordMessage.input, passwordMessage.deviceId, client).catch((err) => {

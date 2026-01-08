@@ -8,10 +8,20 @@ import config from '@config';
  * Access control service - handles the RFID door access flow
  */
 
+// State timing configuration
+const STATE_TIMES = {
+  IncorrectKeycard: config.MQTT_Incorrect_Keycard_STATE_TIME,
+  AwaitingPassword: config.MQTT_Awaiting_Password_STATE_TIME,
+  AccessGranted: config.MQTT_Access_Granted_STATE_TIME,
+  IncorrectPassword: config.MQTT_Incorrect_Password_STATE_TIME,
+} as const;
+
+type StateType = keyof typeof STATE_TIMES;
+
 // Store pending sessions in memory - one per door
 const pendingSessions = new Map<string, PendingSession>();
 
-const SESSION_TIMEOUT_MS = 30 * 1000; // 30 seconds
+const SESSION_TIMEOUT_MS = STATE_TIMES.AwaitingPassword;
 
 /**
  * Process RFID card scan
@@ -27,7 +37,6 @@ export async function processRfidScan(
   rfidDeviceId: string,
   client: MqttClient,
 ): Promise<void> {
-  console.info(`🔑 Processing RFID scan: ${rfidUid} from device: ${rfidDeviceId}`);
 
   try {
     // Step 1: Look up deviceId in door table
@@ -64,7 +73,7 @@ export async function processRfidScan(
         client,
         door.keypadDeviceId,
         'IncorrectKeycard',
-        3000,
+        STATE_TIMES.IncorrectKeycard,
       );
       return;
     }
@@ -81,7 +90,7 @@ export async function processRfidScan(
     // Step 4: Create pending session and start timer
     const timeoutHandle = setTimeout(() => {
       console.warn(`⏱️ Session timeout for door: ${door.id}`);
-      publishMessage(client, door.keypadDeviceId, 'IncorrectPassword', 3000);
+      publishMessage(client, door.keypadDeviceId, 'IncorrectPassword', STATE_TIMES.IncorrectPassword);
       pendingSessions.delete(door.id);
     }, SESSION_TIMEOUT_MS);
 
@@ -98,7 +107,7 @@ export async function processRfidScan(
     pendingSessions.set(door.id, session);
 
     console.info(`⏰ Session created - waiting for password (30s timeout)`);
-    publishMessage(client, door.keypadDeviceId, 'AwaitingPassword', 8000);
+    publishMessage(client, door.keypadDeviceId, 'AwaitingPassword', STATE_TIMES.AwaitingPassword);
   } catch (error) {
     console.error('❌ Error processing RFID scan:', error);
   }
@@ -119,8 +128,6 @@ export async function processPasswordInput(
   keypadDeviceId: string,
   client: MqttClient,
 ): Promise<void> {
-  console.info(`🔐 Processing password input from keypad: ${keypadDeviceId}`);
-
   try {
     // Find the session for this keypad
     const door = await prisma.door.findUnique({
@@ -136,7 +143,7 @@ export async function processPasswordInput(
 
     if (!session) {
       console.warn(`⚠️ No active session for door: ${door.id}`);
-      publishMessage(client, keypadDeviceId, 'IncorrectPassword', 3000);
+      publishMessage(client, keypadDeviceId, 'IncorrectPassword', STATE_TIMES.IncorrectPassword);
       return;
     }
 
@@ -145,7 +152,7 @@ export async function processPasswordInput(
       console.warn(`⏱️ Session expired for door: ${door.id}`);
       clearTimeout(session.timeoutHandle);
       pendingSessions.delete(door.id);
-      publishMessage(client, keypadDeviceId, 'IncorrectPassword', 3000);
+      publishMessage(client, keypadDeviceId, 'IncorrectPassword', STATE_TIMES.IncorrectPassword);
       return;
     }
 
@@ -153,10 +160,9 @@ export async function processPasswordInput(
     let decodedPassword: string;
     try {
       decodedPassword = Buffer.from(password, 'base64').toString('utf-8');
-      console.info(`✅ Password decoded from base64`);
     } catch (err) {
       console.error(`❌ Failed to decode base64 password:`, err);
-      publishMessage(client, keypadDeviceId, 'IncorrectPassword', 3000);
+      publishMessage(client, keypadDeviceId, 'IncorrectPassword', STATE_TIMES.IncorrectPassword);
       return;
     }
 
@@ -168,18 +174,18 @@ export async function processPasswordInput(
         console.info(`✅ Password correct for door: ${door.id}`);
         clearTimeout(session.timeoutHandle);
         pendingSessions.delete(door.id);
-        publishMessage(client, keypadDeviceId, 'AccessGranted', 5000);
+        publishMessage(client, keypadDeviceId, 'AccessGranted', STATE_TIMES.AccessGranted);
 
         // Trigger door unlock
-        triggerDoorUnlock(client, door.doorlockDeviceId, 3000);
+        triggerDoorUnlock(client, door.doorlockDeviceId, config.MQTT_DOOR_OPEN_STATE_TIME);
         return;
       }
 
       console.warn(`❌ Incorrect password for door: ${door.id}`);
-      publishMessage(client, keypadDeviceId, 'IncorrectPassword', 3000);
+      publishMessage(client, keypadDeviceId, 'IncorrectPassword', STATE_TIMES.IncorrectPassword);
     } catch (err) {
       console.error(`❌ Error verifying password with argon2:`, err);
-      publishMessage(client, keypadDeviceId, 'IncorrectPassword', 3000);
+      publishMessage(client, keypadDeviceId, 'IncorrectPassword', STATE_TIMES.IncorrectPassword);
     }
   } catch (error) {
     console.error('❌ Error processing password:', error);
@@ -192,7 +198,7 @@ export async function processPasswordInput(
 function publishMessage(
   client: MqttClient,
   keypadDeviceId: string,
-  state: 'IncorrectKeycard' | 'AwaitingPassword' | 'AccessGranted' | 'IncorrectPassword',
+  state: StateType,
   time: number,
 ): void {
   const topic = config.MQTT_KEYPAD_STATE_TOPIC;
