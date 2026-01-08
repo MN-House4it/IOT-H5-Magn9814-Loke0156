@@ -24,3 +24,7 @@ static const uint8_t GREEN_LED_PIN = A1;
 
 // ---------------- LED Behavior ----------------
 static const uint32_t LED_BLINK_INTERVAL_MS = 500;
+static const uint32_t LED_GLOW_DURATION_MS = 15000;
+
+// ---------------- Door device ----------------
+static const char *DOOR_DEVICE_ID = "304242375241C9033432"; // Replace with your door's ID

@@ -73,6 +73,16 @@ static String buildStatusJson(const String &deviceId, const String &status)
   return json;
 }
 
+static String buildDoorActionJson(const String &deviceId, const String &action)
+{
+  String json;
+  json += "{\n";
+  json += "  \"deviceId\": \"" + deviceId + "\",\n";
+  json += "  \"action\": \"" + action + "\"\n";
+  json += "}";
+  return json;
+}
+
 static void setLED(bool on)
 {
   digitalWrite(LED_PIN, on ? HIGH : LOW);
@@ -88,11 +98,16 @@ static void handleButtonPress()
 {
   bool buttonCurrentlyPressed = digitalRead(BUTTON_PIN) == LOW; // LOW = pressed (active low)
 
+  String deviceName = getUniqueID();
+
   // Button press detected
   if (buttonCurrentlyPressed && !buttonPressed)
   {
     Serial.println("Button pressed - publishing 'close' to door/action");
-    mqtt.publish(MQTT_TOPIC_ACTION, "close", false);
+
+    String payload = buildDoorActionJson(deviceName, "close");
+    mqtt.publish(MQTT_TOPIC_ACTION, payload.c_str(), false);
+
     doorActionActive = true;
     buttonPressed = true;
   }
@@ -100,7 +115,10 @@ static void handleButtonPress()
   else if (!buttonCurrentlyPressed && buttonPressed)
   {
     Serial.println("Button released - publishing 'open' to door/action");
-    mqtt.publish(MQTT_TOPIC_ACTION, "open", false);
+
+    String payload = buildDoorActionJson(deviceName, "open");
+    mqtt.publish(MQTT_TOPIC_ACTION, payload.c_str(), false);
+
     doorActionActive = false;
     buttonPressed = false;
   }
