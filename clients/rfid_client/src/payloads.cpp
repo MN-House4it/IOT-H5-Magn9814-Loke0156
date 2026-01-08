@@ -1,5 +1,6 @@
 #include "payloads.h"
 
+// Build JSON payload containing device ID and RFID UID for MQTT publishing
 String buildJsonPayload(const String& deviceId, const String& uid)
 {
   String json;
@@ -12,6 +13,7 @@ String buildJsonPayload(const String& deviceId, const String& uid)
   return json;
 }
 
+// Build JSON status payload containing device ID and status for MQTT publishing
 String buildStatusJson(const String& deviceId, const String& status)
 {
   String json;
