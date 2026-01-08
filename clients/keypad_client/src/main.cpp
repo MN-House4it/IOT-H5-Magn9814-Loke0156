@@ -28,6 +28,10 @@ static const uint32_t debounceMs = 40;
 static String keyBuffer = "";
 static bool inputEnabled = false;
 
+// --- Doorlock monitoring ---
+static uint32_t doorOpenTimestamp = 0; // Time when "open" received
+static bool doorOpenActive = false;    // Currently waiting for "close"
+
 // --- LED control ---
 enum LedMode
 {
@@ -221,6 +225,39 @@ static void updateLed(LedControl &led)
 // ---------------- MQTT callback ----------------
 static void mqttCallback(char *topic, byte *payload, unsigned int length)
 {
+  // --- Doorlock handling ---
+  if (String(topic) == "doorlock/action")
+  {
+    StaticJsonDocument<128> doc;
+    if (deserializeJson(doc, payload, length))
+    {
+      Serial.println("Invalid JSON on doorlock/action");
+      return;
+    }
+
+    String incomingId = doc["deviceId"] | "";
+    String action = doc["action"] | "";
+
+    if (incomingId != DOOR_DEVICE_ID)
+      return; // Ignore messages for other doors
+
+    if (action == "open")
+    {
+      Serial.println("Door open received");
+      doorOpenTimestamp = millis();
+      doorOpenActive = true;
+    }
+    else if (action == "close")
+    {
+      Serial.println("Door close received");
+      doorOpenActive = false;
+      redLed.mode = LED_IDLE; // Stop red glow
+      digitalWrite(RED_LED_PIN, LOW);
+    }
+
+    return; // Do not continue with keypad/state logic for doorlock messages
+  }
+
   if (String(topic) != MQTT_TOPIC_STATE)
     return;
 
@@ -306,6 +343,9 @@ void setup()
   ensureWiFi();
   ensureMQTT(getUniqueID());
 
+  mqtt.subscribe("doorlock/action");
+  Serial.println("Subscribed to doorlock/action");
+
   Serial.println("Keypad client ready");
 }
 
@@ -319,6 +359,21 @@ void loop()
 
   updateLed(redLed);
   updateLed(greenLed);
+
+  // Check for door open timeout
+  if (doorOpenActive)
+  {
+    uint32_t now = millis();
+    if (now - doorOpenTimestamp > LED_GLOW_DURATION_MS) // 15s timeout
+    {
+      if (redLed.mode != LED_GLOWING)
+      {
+        Serial.println("Door not closed within 15s! Red LED ON");
+        redLed.mode = LED_GLOWING;
+        digitalWrite(RED_LED_PIN, HIGH);
+      }
+    }
+  }
 
   char k = scanKeypad();
   uint32_t now = millis();
