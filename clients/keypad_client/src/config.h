@@ -6,20 +6,21 @@ static const char *WIFI_SSID = "IOT-H5-Magn9814-Loke0156";
 static const char *WIFI_PASSWORD = "Pa55w.rd";
 
 // ---------------- MQTT ----------------
-static const char *MQTT_HOST = "192.168.10.106";
+static const char *MQTT_HOST = "192.168.10.108";
 static const uint16_t MQTT_PORT = 1883;
 
 // Leave empty ("") if you don't use authentication
 static const char *MQTT_USER = "admin";
-static const char *MQTT_PASS = "Admin1234!";
+static const char *MQTT_PASS = "password";
 
 // ---------------- Topics ----------------
 static const char *MQTT_TOPIC_KEY = "keypad/key";
+static const char *MQTT_TOPIC_STATE = "keypad/state";
 static const char *MQTT_TOPIC_STATUS = "device-status";
 
-// ---------------- Behavior ----------------
-static const bool MQTT_RETAIN_UID = true;      // retain last UID on broker
-static const uint32_t DEDUPE_WINDOW_MS = 1500; // avoid spamming same tag if held near reader
+// ---------------- Grove LEDs ----------------
+static const uint8_t RED_LED_PIN = A0;
+static const uint8_t GREEN_LED_PIN = A1;
 
-// ---------------- RFID (I2C) ----------------
-static const uint8_t RFID_I2C_ADDR = 0x28; // M5Stack RFID/RFID2 default
+// ---------------- LED Behavior ----------------
+static const uint32_t LED_BLINK_INTERVAL_MS = 500;
