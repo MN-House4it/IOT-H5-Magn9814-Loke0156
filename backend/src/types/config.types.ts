@@ -48,4 +48,9 @@ export interface Config {
   REFRESH_TOKEN_EXPIRATION: string;
   MAX_FAILED_LOGIN_ATTEMPTS: number;
   ATTEMPT_WINDOW_MINUTES: number;
+  MQTT_BROKER: string;
+  MQTT_USERNAME: string;
+  MQTT_PASSWORD: string;
+  MQTT_STATUS_TOPIC: string;
+  MQTT_RFID_KEY_TOPIC: string;
 }
