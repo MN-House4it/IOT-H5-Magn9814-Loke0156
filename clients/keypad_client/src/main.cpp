@@ -380,7 +380,18 @@ void loop()
       }
       else
       {
-        keyBuffer += k;
+        // Ignore A, B, F
+        if (k == 'A' || k == 'B' || k == 'F')
+        {
+          Serial.print("Key ignored: ");
+          Serial.println(k);
+        }
+        else
+        {
+          keyBuffer += k;
+          Serial.print("Buffer: ");
+          Serial.println(keyBuffer);
+        }
       }
     }
 
