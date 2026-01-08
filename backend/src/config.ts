@@ -32,6 +32,11 @@ const config: Config = {
   MQTT_KEYPAD_STATE_TOPIC: process.env.MQTT_KEYPAD_STATE_TOPIC || 'keypad/state',
   MQTT_KEYPAD_PASSWORD_TOPIC: process.env.MQTT_KEYPAD_PASSWORD_TOPIC || 'keypad/key',
   MQTT_DOORLOCK_OPEN_TOPIC: process.env.MQTT_DOORLOCK_OPEN_TOPIC || 'doorlock/open',
+  MQTT_Access_Granted_STATE_TIME : Number(process.env.MQTT_Access_Granted_STATE_TIME) || 5000,
+  MQTT_Awaiting_Password_STATE_TIME : Number(process.env.MQTT_Awaiting_Password_STATE_TIME) || 8000,
+  MQTT_Incorrect_Keycard_STATE_TIME : Number(process.env.MQTT_Incorrect_Keycard_STATE_TIME) || 3000,
+  MQTT_Incorrect_Password_STATE_TIME : Number(process.env.MQTT_Incorrect_Password_STATE_TIME) || 3000,
+  MQTT_DOOR_OPEN_STATE_TIME : Number(process.env.MQTT_DOOR_OPEN_STATE_TIME) || 10000,
 };
 
 export default config;

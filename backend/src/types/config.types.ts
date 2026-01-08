@@ -56,4 +56,9 @@ export interface Config {
   MQTT_KEYPAD_STATE_TOPIC: string;
   MQTT_KEYPAD_PASSWORD_TOPIC: string;
   MQTT_DOORLOCK_OPEN_TOPIC: string;
+  MQTT_Access_Granted_STATE_TIME : number;
+  MQTT_Awaiting_Password_STATE_TIME : number;
+  MQTT_Incorrect_Keycard_STATE_TIME : number;
+  MQTT_Incorrect_Password_STATE_TIME : number;
+  MQTT_DOOR_OPEN_STATE_TIME : number;
 }
