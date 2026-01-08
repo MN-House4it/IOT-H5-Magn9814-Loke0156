@@ -37,7 +37,6 @@ export async function processRfidScan(
   rfidDeviceId: string,
   client: MqttClient,
 ): Promise<void> {
-  console.info(`🔑 Processing RFID scan: ${rfidUid} from device: ${rfidDeviceId}`);
 
   try {
     // Step 1: Look up deviceId in door table
@@ -129,8 +128,6 @@ export async function processPasswordInput(
   keypadDeviceId: string,
   client: MqttClient,
 ): Promise<void> {
-  console.info(`🔐 Processing password input from keypad: ${keypadDeviceId}`);
-
   try {
     // Find the session for this keypad
     const door = await prisma.door.findUnique({
@@ -163,7 +160,6 @@ export async function processPasswordInput(
     let decodedPassword: string;
     try {
       decodedPassword = Buffer.from(password, 'base64').toString('utf-8');
-      console.info(`✅ Password decoded from base64`);
     } catch (err) {
       console.error(`❌ Failed to decode base64 password:`, err);
       publishMessage(client, keypadDeviceId, 'IncorrectPassword', STATE_TIMES.IncorrectPassword);
