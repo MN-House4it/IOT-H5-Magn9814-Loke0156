@@ -6,12 +6,12 @@ static const char *WIFI_SSID = "IOT-H5-Magn9814-Loke0156";
 static const char *WIFI_PASSWORD = "Pa55w.rd";
 
 // ---------------- MQTT ----------------
-static const char *MQTT_HOST = "192.168.10.108";
+static const char *MQTT_HOST = "192.168.10.112";
 static const uint16_t MQTT_PORT = 1883;
 
 // Leave empty ("") if you don't use authentication
 static const char *MQTT_USER = "admin";
-static const char *MQTT_PASS = "password";
+static const char *MQTT_PASS = "Admin1234!";
 
 // ---------------- Topics ----------------
 static const char *MQTT_TOPIC_KEY = "keypad/key";
