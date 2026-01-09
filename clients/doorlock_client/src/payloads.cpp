@@ -1,5 +1,6 @@
 #include "payloads.h"
 
+// Build JSON status payload containing device ID and status for MQTT publishing. \n for readability.
 String buildStatusJson(const String &deviceId, const String &status)
 {
   String json;
@@ -12,6 +13,7 @@ String buildStatusJson(const String &deviceId, const String &status)
   return json;
 }
 
+// Build JSON payload containing device ID and door action for MQTT publishing. \n for readability.
 String buildDoorActionJson(const String &deviceId, const String &action)
 {
   String json;
