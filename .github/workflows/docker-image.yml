@@ -1,0 +1,63 @@
+name: Docker Image CI
+
+on:
+  push:
+    branches: ["main"]
+
+jobs:
+  build:
+    runs-on: self-hosted
+
+    steps:
+      - name: Check Docker version
+        run: docker --version
+
+      # Step 1: Checkout the code
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # Step 2: Generate .env.backend file
+      - name: Generate .env.backend file
+        run: |
+          mkdir -p ./config/environment-variables
+          echo "# TimeZone" > ./config/environment-variables/.env.backend.prod
+          echo "TZ=${{ secrets.TZ }}" >> ./config/environment-variables/.env.backend.prod
+          echo "NODE_ENV=${{ secrets.NODE_ENV }}" >> ./config/environment-variables/.env.backend.prod
+          echo "DATABASE_URL=${{ secrets.DATABASE_URL }}" >> ./config/environment-variables/.env.backend.prod
+          echo "ACCESS_TOKEN_SECRET=${{ secrets.ACCESS_TOKEN_SECRET }}" >> ./config/environment-variables/.env.backend.prod
+          echo "MQTT_BROKER=${{ secrets.MQTT_BROKER }}" >> ./config/environment-variables/.env.backend.prod
+          echo "MQTT_USERNAME=${{ secrets.MQTT_ADMIN_USERNAME }}" >> ./config/environment-variables/.env.backend.prod
+          echo "MQTT_PASSWORD=${{ secrets.MQTT_ADMIN_PASSWORD }}" >> ./config/environment-variables/.env.backend.prod
+          echo "MQTT_TOPIC=${{ secrets.MQTT_TOPIC }}" >> ./config/environment-variables/.env.backend.prod
+
+      # Step 3: Generate .env.db file
+      - name: Generate .env.db file
+        run: |
+          echo "# POSTGRES" > ./config/environment-variables/.env.db.prod
+          echo "POSTGRES_DB=${{ secrets.POSTGRES_DB }}" >> ./config/environment-variables/.env.db.prod
+          echo "POSTGRES_USER=${{ secrets.POSTGRES_USER }}" >> ./config/environment-variables/.env.db.prod
+          echo "POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}" >> ./config/environment-variables/.env.db.prod
+
+      # Step 4: Generate .env.mqtt file
+      - name: Generate .env.mqtt file
+        run: |
+          echo "NODE_ENV=${{ secrets.NODE_ENV }}" >> ./config/environment-variables/.env.mqtt.prod
+          echo "MQTT_ADMIN_USERNAME=${{ secrets.MQTT_ADMIN_USERNAME }}" >> ./config/environment-variables/.env.mqtt.prod
+          echo "MQTT_ADMIN_PASSWORD=${{ secrets.MQTT_ADMIN_PASSWORD }}" >> ./config/environment-variables/.env.mqtt.prod
+          echo "DOMAIN=${{ secrets.DOMAIN }}" >> ./config/environment-variables/.env.mqtt.prod
+
+      # Step 5: Generate .env.nginx file
+      - name: Generate .env.nginx file
+        run: |
+          echo "CLIENT_CERT=${{ secrets.CLIENT_CERT }}" >> ./config/environment-variables/.env.nginx.prod
+          echo "CLIENT_KEY=${{ secrets.CLIENT_KEY }}" >> ./config/environment-variables/.env.nginx.prod
+          echo "ORIGIN_CERT=${{ secrets.ORIGIN_CERT }}" >> ./config/environment-variables/.env.nginx.prod
+          echo "ORIGIN_KEY=${{ secrets.ORIGIN_KEY }}" >> ./config/environment-variables/.env.nginx.prod
+          echo "SERVER_NAME=${{ secrets.SERVER_NAME }}" >> ./config/environment-variables/.env.nginx.prod
+
+      # Step 6: Run Docker Compose
+      - name: Run Docker Compose
+        run: |
+          export DOCKER_HOST=unix:///run/user/1004/docker.sock
+          docker compose -f ./docker/docker-compose.prod.yml up --build --force-recreate -d
+          docker image prune -f
