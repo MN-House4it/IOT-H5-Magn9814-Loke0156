@@ -1,24 +1,26 @@
 name: iotbigdata
 
 services:
-  frontend:
-    container_name: frontend
-    build:
-      context: ../frontend/
-      dockerfile: Dockerfile.production
-      target: base
-    volumes:
-      - ../frontend/:/usr/src/app
-      - /usr/src/app/node_modules
-    expose:
-      - "3000:3000"
-    depends_on:
-      - "backend"
-    command: npm run dev
-    env_file:
-      - ../config/environment-variables/.env.frontend.prod
-    networks:
-      - internal
+
+  # grafana:
+  #   container_name: grafana
+  #   image: grafana/grafana:main
+  #   expose:
+  #     - 9200:9200
+  #   depends_on:
+  #     - db
+  #     - clickhouse
+  #   env_file:
+  #     - ../config/environment-variables/.env.grafana.dev
+  #   volumes:
+  #     - ../config/grafana/defaults.ini:/usr/share/grafana/conf/defaults.ini
+  #     - ../config/grafana/datasources.yml:/etc/grafana/provisioning/datasources/datasources.yml
+  #     - ../config/grafana/main.yml:/etc/grafana/provisioning/dashboards/main.yml
+  #     - ../config/grafana/dashboards/:/var/lib/grafana/dashboards/
+  #     - grafana-data:/var/lib/grafana
+  #   networks:
+  #     - internal
+  #     - public
 
   backend:
     container_name: backend
@@ -26,19 +28,13 @@ services:
       context: ../backend/
       dockerfile: Dockerfile
       target: base
-    deploy:
-      restart_policy:
-        condition: on-failure
-        delay: 5s
-        max_attempts: 3
-        window: 120s
     expose:
       - "3001"
     command: ["npm", "run", "dev"]
     depends_on:
       - db
     env_file:
-      - ../config/environment-variables/.env.backend.prod
+      - ../config/environment-variables/.env.backend.dev
     volumes:
       - ../backend/src:/usr/src/app/src
     configs:
@@ -46,56 +42,12 @@ services:
         target: /usr/src/app/nodemon.json
     networks:
       - internal
-      - public
-
-  db:
-    container_name: db
-    image: timescale/timescaledb:latest-pg17
-    deploy:
-      restart_policy:
-        condition: on-failure
-        delay: 5s
-        max_attempts: 3
-        window: 120s
-    expose:
-      - 5432:5432
-    env_file:
-      - ../config/environment-variables/.env.db.prod
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-    networks:
-      - internal
-
-  grafana:
-    container_name: grafana
-    image: grafana/grafana:main
-    expose:
-      - 9200:9200
-    depends_on:
-      - db
-    env_file:
-      - ../config/environment-variables/.env.grafana.prod
-    volumes:
-      - ../config/grafana/defaults.ini:/usr/share/grafana/conf/defaults.ini
-      - ../config/grafana/datasources.yml:/etc/grafana/provisioning/datasources/datasources.yml
-      - ../config/grafana/main.yml:/etc/grafana/provisioning/dashboards/main.yml
-      - ../config/grafana/dashboards/:/var/lib/grafana/dashboards/
-      - grafana-data:/var/lib/grafana
-    networks:
-      - internal
-      - public
 
   mqtt5:
     container_name: mqtt5
     build:
       context: ..
       dockerfile: docker/mosquitto.Dockerfile
-    deploy:
-      restart_policy:
-        condition: on-failure
-        delay: 5s
-        max_attempts: 3
-        window: 120s
     expose:
       - 1883 # Plain MQTT
       - 8883 # Secure MQTT (TLS)
@@ -106,13 +58,13 @@ services:
     depends_on:
       - reverse-proxy
     env_file:
-      - ../config/environment-variables/.env.mqtt.prod
+      - ../config/environment-variables/.env.mqtt.dev
     volumes:
       - mqtt-data:/mosquitto/data:rw
       - mqtt-log:/mosquitto/log:rw
-      - cert-link:/etc/letsencrypt/live
-      - cert-config:/etc/letsencrypt/renewal
-      - cert:/etc/letsencrypt/archive
+      # - cert-link:/etc/letsencrypt/live
+      # - cert-config:/etc/letsencrypt/renewal
+      # - cert:/etc/letsencrypt/archive
     configs:
       - source: mosquitto_config
         target: /mosquitto/config/mosquitto.conf
@@ -120,31 +72,36 @@ services:
       - internal
       - public
 
+  db:
+    container_name: db
+    image: timescale/timescaledb:latest-pg17
+    expose:
+      - "5432"
+    ports:
+      - 5432:5432
+    env_file:
+      - ../config/environment-variables/.env.db.dev
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - public
+      - internal
+
   reverse-proxy:
     container_name: reverse-proxy
     build:
       context: ..
       dockerfile: docker/nginx.Dockerfile
-    deploy:
-      restart_policy:
-        condition: on-failure
-        delay: 5s
-        max_attempts: 3
-        window: 120s
     ports:
       - 443:443
       - 80:80
       - 8080:8080
-    expose:
-      - 443
-      - 80
-      - 8080
-      - 1883
+      - 1883:1883
     depends_on:
       - backend
-      - grafana
+      # - grafana
     env_file:
-      - ../config/environment-variables/.env.nginx.prod
+      - ../config/environment-variables/.env.nginx.dev
     configs:
       - source: nginx_config
         target: /etc/nginx/nginx.conf
@@ -152,47 +109,30 @@ services:
         target: /etc/nginx/conf.d/01-mqtt.stream
     networks:
       - internal
-      # - tunnel
       - public
-
-  tunnel:
-    image: cloudflare/cloudflared
-    container_name: cloudflared-tunnel
-    command: tunnel run
-    env_file:
-      - ../config/environment-variables/.env.cloudflare.prod
-    volumes:
-      - cloudflare-tunnel:/etc/cloudflared
-    networks:
-      - public
-      - tunnel
 
 networks:
   public:
     driver: bridge
-  tunnel:
-    driver: bridge
-    internal: true
   internal:
-    driver: bridge
+    name: internal
     internal: true
 
 volumes:
   postgres_data: {}
   mqtt-data: {}
   mqtt-log: {}
-  cloudflare-tunnel: {}
-  grafana-data: {}
-  cert-link: {}
-  cert: {}
-  cert-config: {}
+  # grafana-data: {}
+  # cert-link: {}
+  # cert: {}
+  # cert-config: {}
 
 configs:
   nginx_config:
     file: ../config/nginx.conf
-  backend_nodemon:
-    file: ../backend/nodemon.json
-  mosquitto_config:
-    file: ../config/mosquitto.conf
   nginx_stream_config:
     file: ../config/01-mqtt.stream
+  mosquitto_config:
+    file: ../config/mosquitto.dev.conf
+  backend_nodemon:
+    file: ../backend/nodemon.json
