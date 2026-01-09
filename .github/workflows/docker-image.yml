@@ -28,7 +28,6 @@ jobs:
           echo "MQTT_BROKER=${{ secrets.MQTT_BROKER }}" >> ./config/environment-variables/.env.backend.prod
           echo "MQTT_USERNAME=${{ secrets.MQTT_ADMIN_USERNAME }}" >> ./config/environment-variables/.env.backend.prod
           echo "MQTT_PASSWORD=${{ secrets.MQTT_ADMIN_PASSWORD }}" >> ./config/environment-variables/.env.backend.prod
-          echo "MQTT_TOPIC=${{ secrets.MQTT_TOPIC }}" >> ./config/environment-variables/.env.backend.prod
 
       # Step 3: Generate .env.db file
       - name: Generate .env.db file
