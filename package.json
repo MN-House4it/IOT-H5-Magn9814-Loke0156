@@ -1,0 +1,17 @@
+{
+  "name": "iot",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "install": "cd backend && npm install && cd ..",
+    "dev": "docker compose  -f ./docker/docker-compose.yml up -d && docker image prune -f",
+    "backend:dev": "docker compose -f ./docker/docker-compose.yml up -d && docker image prune -f",
+    "backend": "docker compose -f ./docker/docker-compose.prod.yml up -d && docker image prune",
+    "build:dev": "docker compose -f ./docker/docker-compose.yml build",
+    "build": "docker compose -f ./docker/docker-compose.prod.yml build",
+    "seed": "cd backend && npx prisma db push && npx prisma db seed",
+    "prisma:generate": "cd backend && npx prisma generate"
+  },
+  "author": "IOT",
+  "description": "World best iot management system"
+}

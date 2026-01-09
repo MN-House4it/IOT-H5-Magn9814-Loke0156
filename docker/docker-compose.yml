@@ -1,0 +1,138 @@
+name: iotbigdata
+
+services:
+
+  # grafana:
+  #   container_name: grafana
+  #   image: grafana/grafana:main
+  #   expose:
+  #     - 9200:9200
+  #   depends_on:
+  #     - db
+  #     - clickhouse
+  #   env_file:
+  #     - ../config/environment-variables/.env.grafana.dev
+  #   volumes:
+  #     - ../config/grafana/defaults.ini:/usr/share/grafana/conf/defaults.ini
+  #     - ../config/grafana/datasources.yml:/etc/grafana/provisioning/datasources/datasources.yml
+  #     - ../config/grafana/main.yml:/etc/grafana/provisioning/dashboards/main.yml
+  #     - ../config/grafana/dashboards/:/var/lib/grafana/dashboards/
+  #     - grafana-data:/var/lib/grafana
+  #   networks:
+  #     - internal
+  #     - public
+
+  backend:
+    container_name: backend
+    build:
+      context: ../backend/
+      dockerfile: Dockerfile
+      target: base
+    expose:
+      - "3001"
+    command: ["npm", "run", "dev"]
+    depends_on:
+      - db
+    env_file:
+      - ../config/environment-variables/.env.backend.dev
+    volumes:
+      - ../backend/src:/usr/src/app/src
+    configs:
+      - source: backend_nodemon
+        target: /usr/src/app/nodemon.json
+    networks:
+      - internal
+
+  mqtt5:
+    container_name: mqtt5
+    build:
+      context: ..
+      dockerfile: docker/mosquitto.Dockerfile
+    expose:
+      - 1883 # Plain MQTT
+      - 8883 # Secure MQTT (TLS)
+      - 8080 # Secure MQTT (TLS) v2
+      - 9001 # WebSocket (optional)
+      - 9443 # Secure WebSocket (optional)
+      - 80 # Certbot
+    depends_on:
+      - reverse-proxy
+    env_file:
+      - ../config/environment-variables/.env.mqtt.dev
+    volumes:
+      - mqtt-data:/mosquitto/data:rw
+      - mqtt-log:/mosquitto/log:rw
+      # - cert-link:/etc/letsencrypt/live
+      # - cert-config:/etc/letsencrypt/renewal
+      # - cert:/etc/letsencrypt/archive
+    configs:
+      - source: mosquitto_config
+        target: /mosquitto/config/mosquitto.conf
+    networks:
+      - internal
+      - public
+
+  db:
+    container_name: db
+    image: timescale/timescaledb:latest-pg17
+    expose:
+      - "5432"
+    ports:
+      - 5432:5432
+    env_file:
+      - ../config/environment-variables/.env.db.dev
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - public
+      - internal
+
+  reverse-proxy:
+    container_name: reverse-proxy
+    build:
+      context: ..
+      dockerfile: docker/nginx.Dockerfile
+    ports:
+      - 443:443
+      - 80:80
+      - 8080:8080
+      - 1883:1883
+    depends_on:
+      - backend
+      # - grafana
+    env_file:
+      - ../config/environment-variables/.env.nginx.dev
+    configs:
+      - source: nginx_config
+        target: /etc/nginx/nginx.conf
+      - source: nginx_stream_config
+        target: /etc/nginx/conf.d/01-mqtt.stream
+    networks:
+      - internal
+      - public
+
+networks:
+  public:
+    driver: bridge
+  internal:
+    name: internal
+    internal: true
+
+volumes:
+  postgres_data: {}
+  mqtt-data: {}
+  mqtt-log: {}
+  # grafana-data: {}
+  # cert-link: {}
+  # cert: {}
+  # cert-config: {}
+
+configs:
+  nginx_config:
+    file: ../config/nginx.conf
+  nginx_stream_config:
+    file: ../config/01-mqtt.stream
+  mosquitto_config:
+    file: ../config/mosquitto.dev.conf
+  backend_nodemon:
+    file: ../backend/nodemon.json

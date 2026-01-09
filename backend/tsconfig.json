@@ -1,0 +1,42 @@
+{
+  "compilerOptions": {
+    "module": "Node16",
+    "strict": true,
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "target": "ES2023",
+    "noImplicitAny": true,
+    "moduleResolution": "NodeNext",
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true,
+    "sourceMap": true,
+    "outDir": "./dist",
+    "baseUrl": "./src",
+    "paths": {
+      "*": ["node_modules/*"],
+      "@app": ["app"],
+      "@routes/*": ["api/routes/*"],
+      "@controllers/*": ["api/controllers/*"],
+      "@services/*": ["api/services/*"],
+      "@api-types/*": ["types/*"],
+      "@utils/*": ["utils/*"],
+      "@config": ["config"],
+      "@passport": ["passport"],
+      "@prisma-instance": ["prisma"],
+      "@middlewares/*": ["middleware/*"],
+      "@schemas/*": ["schemas/*"],
+      "@/*": ["./*"]
+    },
+    "allowJs": true
+  },
+  "include": [
+    "*",
+    "src/index.ts",
+    "src/config.ts",
+    "src/passport.ts",
+    "src/**/*",
+    "eslint.config.mjs"
+  ]
+}

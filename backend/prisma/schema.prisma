@@ -1,0 +1,105 @@
+generator client {
+  provider = "prisma-client-js"
+  previewFeatures = ["postgresqlExtensions"]
+}
+
+datasource db {
+  provider   = "postgresql"
+  url        = env("DATABASE_URL")
+  extensions = [timescaledb]
+}
+
+enum Status {
+  ACTIVE
+  INACTIVE
+  MAINTENANCE
+  AWAITING
+}
+
+enum AlertType {
+  ERROR
+  WARNING
+  INFO
+}
+
+enum AccessStatus {
+  CORRECT_KEYCARD
+  INCORRECT_KEYCARD
+  CORRECT_PASSWORD
+  INCORRECT_PASSWORD
+  SESSION_TIMEOUT
+  ACCESS_GRANTED
+  DOOR_UNLOCKED
+}
+
+model User {
+  id        String   @id @default(uuid()) @db.Uuid
+  initials  String
+  name      String
+  email     String   @unique
+  username  String   @unique
+  password  String
+  active    Boolean  @default(true)
+  createdAt DateTime @default(now()) @db.Timestamptz()
+  updatedAt DateTime @updatedAt @db.Timestamptz()
+
+  userKeycards UserKeycard[]
+}
+
+model Keycard {
+  id        String   @id @default(uuid()) @db.Uuid
+  code      String   @unique
+  issuedAt  DateTime @default(now())
+  active    Boolean  @default(true)
+
+  userKeycards UserKeycard[]
+}
+
+model UserKeycard {
+  @@unique([userId, keycardId])
+
+  id        String   @id @default(uuid()) @db.Uuid
+  userId    String   @db.Uuid
+  keycardId String   @db.Uuid
+  issuedAt  DateTime @default(now())
+  password  String
+
+  user    User    @relation(fields: [userId], references: [id])
+  keycard Keycard @relation(fields: [keycardId], references: [id])
+
+  accessGrants UserKeycardDoor[]
+}
+
+model Door {
+  id               String   @id @default(uuid()) @db.Uuid
+  rfidDeviceId     String   @unique
+  keypadDeviceId   String   @unique
+  doorlockDeviceId String   @unique
+  status           Status   @default(AWAITING)
+
+  accessGrants UserKeycardDoor[]
+  accessLogs   AccessLog[]
+}
+
+model UserKeycardDoor {
+  @@unique([userKeycardId, doorId])
+
+  id            String   @id @default(uuid()) @db.Uuid
+  userKeycardId String   @db.Uuid
+  doorId        String   @db.Uuid
+
+  userKeycard UserKeycard @relation(fields: [userKeycardId], references: [id])
+  door        Door        @relation(fields: [doorId], references: [id])
+}
+
+model AccessLog {
+  id              String       @id @default(uuid()) @db.Uuid
+  doorId          String       @db.Uuid
+  userKeycardId   String?      @db.Uuid
+  keycardCode     String?
+  accessStatus    AccessStatus
+  timestamp       DateTime     @default(now()) @db.Timestamptz()
+  details         String?      // Additional context (e.g., error messages)
+
+  door        Door         @relation(fields: [doorId], references: [id], onDelete: Cascade)
+}

@@ -1,0 +1,73 @@
+# Top-level configurations (e.g., user, worker processes)
+user nginx;
+worker_processes auto;
+
+# Error log and PID settings
+error_log /var/log/nginx/error.log;
+pid /var/run/nginx.pid;
+
+# Load modules (if needed)
+include /etc/nginx/modules/*.conf;
+
+# Events block
+events {
+    worker_connections 1024;
+}
+
+http {
+
+    # Upgrade HTTP connection to WebSocket dynamically
+    map $http_upgrade $connection_upgrade {
+        default upgrade;
+        ''      close;
+    }
+
+    # Define the MIME types
+    include /etc/nginx/mime.types;
+    default_type application/octet-stream;
+
+    # Log format and location
+    access_log /var/log/nginx/access.log;
+
+    # Enable gzip
+    gzip on;
+    gzip_proxied no-cache no-store private expired auth no_last_modified;
+    gzip_types 
+    text/plain 
+    text/css
+    text/xml
+    text/javascript
+    application/x-javascript
+    application/xml
+    application/xml+rss
+    application/xhtml+xml
+    application/atom_xml
+    application/x-font-ttf
+    application/x-font-opentype
+    image/svg+xml;
+
+    # Define server block for HTTP to HTTPS redirection
+    server {
+        listen 80 default_server;
+        listen [::]:80 default_server;
+
+        server_name _;
+
+        location /health {
+            return 200 'Nginx is healthy';
+            add_header Content-Type text/plain;
+        }
+        location /api/ {
+            proxy_set_header Host $host;
+            proxy_set_header X-Real-IP $remote_addr;
+            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+            proxy_set_header X-Forwarded-Host $hostname;
+            proxy_set_header X-Forwarded-Proto $scheme;
+            proxy_set_header Upgrade $http_upgrade;
+            proxy_set_header Connection $connection_upgrade;
+            proxy_read_timeout 1d;
+
+            proxy_pass http://backend:3001/;
+        }
+    }
+}

@@ -1,0 +1,28 @@
+stream {
+    upstream mqtt_ssl {
+        hash $remote_addr consistent;
+        server mqtt5:8080;
+    }
+
+    server {
+        listen 8080;
+        listen [::]:8080;
+        server_name mqttsss.exploit4all.com;
+
+        proxy_pass mqtt_ssl;
+    }
+
+    upstream mqtt {
+        hash $remote_addr consistent;
+        server mqtt5:1883;
+    }
+
+    server {
+        listen 1883;
+        listen [::]:1883;
+        server_name mqttsss.exploit4all.com;
+
+        proxy_pass mqtt;
+    }
+    
+}
