@@ -11,7 +11,7 @@ services:
   #     - db
   #     - clickhouse
   #   env_file:
-  #     - ../config/environment-variables/.env.grafana.dev
+  #     - ../config/environment-variables/.env.grafana.prod
   #   volumes:
   #     - ../config/grafana/defaults.ini:/usr/share/grafana/conf/defaults.ini
   #     - ../config/grafana/datasources.yml:/etc/grafana/provisioning/datasources/datasources.yml
@@ -34,7 +34,7 @@ services:
     depends_on:
       - db
     env_file:
-      - ../config/environment-variables/.env.backend.dev
+      - ../config/environment-variables/.env.backend.prod
     volumes:
       - ../backend/src:/usr/src/app/src
     configs:
@@ -58,7 +58,7 @@ services:
     depends_on:
       - reverse-proxy
     env_file:
-      - ../config/environment-variables/.env.mqtt.dev
+      - ../config/environment-variables/.env.mqtt.prod
     volumes:
       - mqtt-data:/mosquitto/data:rw
       - mqtt-log:/mosquitto/log:rw
@@ -80,7 +80,7 @@ services:
     ports:
       - 5432:5432
     env_file:
-      - ../config/environment-variables/.env.db.dev
+      - ../config/environment-variables/.env.db.prod
     volumes:
       - postgres_data:/var/lib/postgresql/data
     networks:
@@ -101,7 +101,7 @@ services:
       - backend
       # - grafana
     env_file:
-      - ../config/environment-variables/.env.nginx.dev
+      - ../config/environment-variables/.env.nginx.prod
     configs:
       - source: nginx_config
         target: /etc/nginx/nginx.conf
@@ -133,6 +133,6 @@ configs:
   nginx_stream_config:
     file: ../config/01-mqtt.stream
   mosquitto_config:
-    file: ../config/mosquitto.dev.conf
+    file: ../config/mosquitto.prod.conf
   backend_nodemon:
     file: ../backend/nodemon.json
