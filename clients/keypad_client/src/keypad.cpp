@@ -176,6 +176,9 @@ void keypadSubmit()
 
     Serial.println("Password submitted, waiting for server response");
 
+    // Stop green LED blinking immediately since password was submitted
+    keypadLedGreenOff();
+
     // Disable input until next MQTT state
     inputEnabled = false;
     keyBuffer = "";
