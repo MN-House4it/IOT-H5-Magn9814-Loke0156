@@ -193,6 +193,9 @@ void keypadLedHandleMqtt(char *topic, byte *payload, unsigned int length)
   }
   else if (state == "AwaitingPassword")
   {
+    // Stop any red blinking/error indicator when awaiting a new password
+    keypadLedRedOff();
+
     keypadLedGreenBlink(timeMs);
     keypadSetInputEnabled(true);
     keypadClearBuffer();
