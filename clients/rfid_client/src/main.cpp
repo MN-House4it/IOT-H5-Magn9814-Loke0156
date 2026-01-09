@@ -12,16 +12,19 @@ static RfidReader rfid(RFID_I2C_ADDR, -1);
 // MQTT network handler
 static NetMqtt net;
 
-// Track the last read UID to detect duplicate reads
+// Tracks the last read UID to detect duplicate reads
 static String lastUid;
-// Track when the last UID was published to the MQTT broker
+// Tracks when the last UID was published to the MQTT broker
 static uint32_t lastPublishMs = 0;
 
 void setup()
 {
   // Initialize serial communication for debugging
   Serial.begin(115200);
-  while (!Serial) { delay(10); }
+  while (!Serial)
+  {
+    delay(10);
+  }
 
   // Initialize I2C communication for RFID reader
   Wire.begin();
@@ -55,7 +58,8 @@ void loop()
 
   // Attempt to read an RFID card/tag
   String uid, piccType;
-  if (!rfid.readUid(uid, piccType)) {
+  if (!rfid.readUid(uid, piccType))
+  {
     delay(20);
     return;
   }
@@ -70,7 +74,8 @@ void loop()
   const uint32_t now = millis();
   const bool duplicate = (uid == lastUid) && (now - lastPublishMs < DEDUPE_WINDOW_MS);
 
-  if (!duplicate) {
+  if (!duplicate)
+  {
     // Build MQTT payload with device info and UID
     String payload = buildJsonPayload(deviceName, uid);
 

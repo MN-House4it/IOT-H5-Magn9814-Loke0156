@@ -16,10 +16,12 @@ void NetMqtt::begin()
 void NetMqtt::ensureWiFi()
 {
   // Return early if already connected
-  if (WiFi.status() == WL_CONNECTED) return;
+  if (WiFi.status() == WL_CONNECTED)
+    return;
 
   // Check if WiFi module is present
-  if (WiFi.status() == WL_NO_MODULE) {
+  if (WiFi.status() == WL_NO_MODULE)
+  {
     Serial.println("WiFi module not found. Check WiFiNINA module/firmware.");
   }
 
@@ -28,7 +30,8 @@ void NetMqtt::ensureWiFi()
   Serial.println(WIFI_SSID);
 
   // Block until WiFi connection succeeds
-  while (WiFi.begin(WIFI_SSID, WIFI_PASSWORD) != WL_CONNECTED) {
+  while (WiFi.begin(WIFI_SSID, WIFI_PASSWORD) != WL_CONNECTED)
+  {
     Serial.print(".");
     delay(500);
   }
@@ -40,10 +43,11 @@ void NetMqtt::ensureWiFi()
 }
 
 // Ensure MQTT connection is established and maintained
-void NetMqtt::ensureMQTT(const String& clientId)
+void NetMqtt::ensureMQTT(const String &clientId)
 {
   // Retry connection loop until successful
-  while (!_mqtt.connected()) {
+  while (!_mqtt.connected())
+  {
     // Ensure WiFi is available before attempting MQTT connection
     ensureWiFi();
 
@@ -53,15 +57,20 @@ void NetMqtt::ensureMQTT(const String& clientId)
     Serial.print(" ... ");
 
     bool ok = false;
-    if (mqttHasAuth()) ok = _mqtt.connect(clientId.c_str(), MQTT_USER, MQTT_PASS);
-    else              ok = _mqtt.connect(clientId.c_str());
+    if (mqttHasAuth())
+      ok = _mqtt.connect(clientId.c_str(), MQTT_USER, MQTT_PASS);
+    else
+      ok = _mqtt.connect(clientId.c_str());
 
     // Handle connection result
-    if (ok) {
+    if (ok)
+    {
       Serial.println("connected!");
       // Publish online status message
       publishOnlineStatus(clientId);
-    } else {
+    }
+    else
+    {
       // Retry connection after delay
       Serial.print("failed, rc=");
       Serial.print(_mqtt.state());
@@ -72,7 +81,7 @@ void NetMqtt::ensureMQTT(const String& clientId)
 }
 
 // Publish device online status to MQTT broker
-void NetMqtt::publishOnlineStatus(const String& deviceName)
+void NetMqtt::publishOnlineStatus(const String &deviceName)
 {
   // Build and publish status message with retain flag
   String statusPayload = buildStatusJson(deviceName, "online");
@@ -90,7 +99,7 @@ void NetMqtt::loop()
 }
 
 // Publish a message to a specific MQTT topic
-bool NetMqtt::publish(const char* topic, const String& payload, bool retain)
+bool NetMqtt::publish(const char *topic, const String &payload, bool retain)
 {
   return _mqtt.publish(topic, payload.c_str(), retain);
 }
