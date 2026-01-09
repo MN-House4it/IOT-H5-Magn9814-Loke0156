@@ -8,7 +8,7 @@
 void setup()
 {
   // Initialize serial communication for debugging
-  Serial.begin(9600);
+  Serial.begin(9600); // Set down from 1150200 to 9600 due to terminal printing errors.
   while (!Serial)
   {
     delay(10);
