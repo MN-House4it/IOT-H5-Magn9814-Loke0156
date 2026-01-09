@@ -3,14 +3,15 @@
 #include "device_id.h"
 #include <ArduinoJson.h>
 
-// --- LED control ---
+// --- LED control modes ---
 enum LedMode
 {
-  LED_IDLE,
-  LED_BLINKING,
-  LED_GLOWING
+  LED_IDLE,     // LED off
+  LED_BLINKING, // LED blinking
+  LED_GLOWING   // LED solid ON for duration
 };
 
+// Structure describing LED state machine
 struct LedControl
 {
   uint8_t pin;
@@ -20,11 +21,15 @@ struct LedControl
   uint32_t endTimeMs;
 };
 
+// LED instances
 static LedControl redLed = {RED_LED_PIN, LED_IDLE, false, 0, 0};
 static LedControl greenLed = {GREEN_LED_PIN, LED_IDLE, false, 0, 0};
+
+// Door open tracking
 static uint32_t doorOpenTimestamp = 0;
 static bool doorOpenActive = false;
 
+// Start blinking an LED for a given duration
 static void startBlink(LedControl &led, uint32_t durationMs)
 {
   led.mode = LED_BLINKING;
@@ -34,6 +39,7 @@ static void startBlink(LedControl &led, uint32_t durationMs)
   digitalWrite(led.pin, LOW);
 }
 
+// Start glowing (solid ON) an LED for a given duration
 static void startGlow(LedControl &led, uint32_t durationMs)
 {
   led.mode = LED_GLOWING;
@@ -41,6 +47,7 @@ static void startGlow(LedControl &led, uint32_t durationMs)
   digitalWrite(led.pin, HIGH);
 }
 
+// Update LED state machine
 static void updateLed(LedControl &led)
 {
   uint32_t now = millis();
@@ -71,6 +78,7 @@ static void updateLed(LedControl &led)
   }
 }
 
+// Initialize LED GPIO pins
 void keypadLedInit()
 {
   pinMode(RED_LED_PIN, OUTPUT);
@@ -79,25 +87,11 @@ void keypadLedInit()
   digitalWrite(GREEN_LED_PIN, LOW);
 }
 
-void keypadLedRedBlink(uint32_t durationMs)
-{
-  startBlink(redLed, durationMs);
-}
-
-void keypadLedGreenBlink(uint32_t durationMs)
-{
-  startBlink(greenLed, durationMs);
-}
-
-void keypadLedRedGlow(uint32_t durationMs)
-{
-  startGlow(redLed, durationMs);
-}
-
-void keypadLedGreenGlow(uint32_t durationMs)
-{
-  startGlow(greenLed, durationMs);
-}
+// Public LED control helpers
+void keypadLedRedBlink(uint32_t durationMs) { startBlink(redLed, durationMs); }
+void keypadLedGreenBlink(uint32_t durationMs) { startBlink(greenLed, durationMs); }
+void keypadLedRedGlow(uint32_t durationMs) { startGlow(redLed, durationMs); }
+void keypadLedGreenGlow(uint32_t durationMs) { startGlow(greenLed, durationMs); }
 
 void keypadLedRedOff()
 {
@@ -111,16 +105,17 @@ void keypadLedGreenOff()
   digitalWrite(GREEN_LED_PIN, LOW);
 }
 
+// Main LED update loop
 void keypadLedLoop()
 {
   updateLed(redLed);
   updateLed(greenLed);
 
-  // Check for door open timeout
+  // Check for door left open too long
   if (doorOpenActive)
   {
     uint32_t now = millis();
-    if (now - doorOpenTimestamp > LED_GLOW_DURATION_MS) // 15s timeout
+    if (now - doorOpenTimestamp > LED_GLOW_DURATION_MS)
     {
       if (redLed.mode != LED_GLOWING)
       {
@@ -131,9 +126,10 @@ void keypadLedLoop()
   }
 }
 
+// Handle incoming MQTT messages affecting LEDs and keypad state
 void keypadLedHandleMqtt(char *topic, byte *payload, unsigned int length)
 {
-  // --- Doorlock handling ---
+  // --- Door lock action handling ---
   if (String(topic) == "doorlock/action")
   {
     StaticJsonDocument<128> doc;
@@ -147,7 +143,7 @@ void keypadLedHandleMqtt(char *topic, byte *payload, unsigned int length)
     String action = doc["action"] | "";
 
     if (incomingId != DOOR_DEVICE_ID)
-      return; // Ignore messages for other doors
+      return;
 
     if (action == "open")
     {
@@ -162,9 +158,10 @@ void keypadLedHandleMqtt(char *topic, byte *payload, unsigned int length)
       keypadLedRedOff();
     }
 
-    return; // Do not continue with keypad/state logic for doorlock messages
+    return; // Stop further processing
   }
 
+  // --- Keypad state handling ---
   if (String(topic) != MQTT_TOPIC_STATE)
     return;
 
@@ -193,9 +190,7 @@ void keypadLedHandleMqtt(char *topic, byte *payload, unsigned int length)
   }
   else if (state == "AwaitingPassword")
   {
-    // Stop any red blinking/error indicator when awaiting a new password
     keypadLedRedOff();
-
     keypadLedGreenBlink(timeMs);
     keypadSetInputEnabled(true);
     keypadClearBuffer();
@@ -208,15 +203,15 @@ void keypadLedHandleMqtt(char *topic, byte *payload, unsigned int length)
   }
 }
 
+// Manually set door open state
 void keypadLedSetDoorOpen(bool isOpen)
 {
   doorOpenActive = isOpen;
   if (isOpen)
-  {
     doorOpenTimestamp = millis();
-  }
 }
 
+// Get current door open state
 bool keypadLedGetDoorOpen()
 {
   return doorOpenActive;
