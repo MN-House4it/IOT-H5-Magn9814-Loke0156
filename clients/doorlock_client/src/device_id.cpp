@@ -2,12 +2,6 @@
 #include <ArduinoUniqueID.h>
 #include "config.h"
 
-// Check if MQTT authentication credentials are configured
-bool mqttHasAuth()
-{
-  return MQTT_USER && MQTT_USER[0] != '\0';
-}
-
 // Convert the unique device ID to a hexadecimal string format. Credit goes to ricaun on GitHub for the original idea.
 String getUniqueID()
 {

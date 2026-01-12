@@ -22,7 +22,6 @@ static char lastKey = 0;          // Last scanned key
 static uint32_t lastChangeMs = 0; // Timestamp of last key change
 static String keyBuffer = "";     // Collected keypad input
 static bool inputEnabled = false; // Whether input is currently accepted
-static const uint32_t KEYPAD_DEBOUNCE_MS = 40;
 
 // --- Base64 encoding ---
 // Used to encode keypad input before sending via MQTT

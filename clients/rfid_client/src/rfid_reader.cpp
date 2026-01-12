@@ -43,24 +43,25 @@ void RfidReader::halt()
 
   // Stop any encrypted communication and reset the reader state
   _mfrc.PCD_StopCrypto1();
+}
 
-  // Convert the RFID UID bytes to a formatted hexadecimal string
-  String RfidReader::uidToString()
+// Convert the RFID UID bytes to a formatted hexadecimal string
+String RfidReader::uidToString()
+{
+  String s;
+  // Iterate through each byte of the UID
+  for (byte i = 0; i < _mfrc.uid.size; i++)
   {
-    String s;
-    // Iterate through each byte of the UID
-    for (byte i = 0; i < _mfrc.uid.size; i++)
-    {
-      // Pad single-digit hex values with leading zero
-      if (_mfrc.uid.uidByte[i] < 0x10)
-        s += '0';
-      // Append the byte as hexadecimal
-      s += String(_mfrc.uid.uidByte[i], HEX);
-      // Add colon separator between bytes (except after last byte)
-      if (i + 1 < _mfrc.uid.size)
-        s += ':';
-    }
-    // Convert the result to uppercase
-    s.toUpperCase();
-    return s;
+    // Pad single-digit hex values with leading zero
+    if (_mfrc.uid.uidByte[i] < 0x10)
+      s += '0';
+    // Append the byte as hexadecimal
+    s += String(_mfrc.uid.uidByte[i], HEX);
+    // Add colon separator between bytes (except after last byte)
+    if (i + 1 < _mfrc.uid.size)
+      s += ':';
   }
+  // Convert the result to uppercase
+  s.toUpperCase();
+  return s;
+}

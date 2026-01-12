@@ -40,7 +40,7 @@ async function main() {
   ] as const;
 
   // -----------------------------
-  // USERS (idempotent)
+  // USERS
   // -----------------------------
   const userPasswordHashes = await Promise.all(
     usersData.map((u) => argon2.hash(u.plainPassword))
@@ -64,7 +64,7 @@ async function main() {
   }
 
   // -----------------------------
-  // KEYCARDS (idempotent)
+  // KEYCARDS
   // -----------------------------
   for (const kc of keycardsData) {
     await prisma.keycard.upsert({
@@ -75,7 +75,7 @@ async function main() {
   }
 
   // -----------------------------
-  // DOOR (idempotent)
+  // DOORS
   // -----------------------------
   // Using rfidDeviceId as the natural unique key
   await prisma.door.upsert({
