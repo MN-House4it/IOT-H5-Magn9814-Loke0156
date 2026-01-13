@@ -1,6 +1,9 @@
 #pragma once
 #include <Arduino.h>
 
+// ---------------- Mode ----------------
+static const bool TEST_MODE = false;
+
 // ---------------- WiFi ----------------
 static const char *WIFI_SSID = "IOT-H5-Magn9814-Loke0156";
 static const char *WIFI_PASSWORD = "Pa55w.rd";
