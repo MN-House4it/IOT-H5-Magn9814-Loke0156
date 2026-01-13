@@ -1,6 +1,6 @@
 # keypad_client
 
-An Arduino/PlatformIO client that implements the **keypad step** in the RFID → password → unlock flow.
+An Arduino/PlatformIO client that implements the **keypad step** in the RFID → keypad → doorlock flow.
 
 It:
 - connects to **WiFi** and **MQTT**
