@@ -9,7 +9,7 @@ To report a vulnerability, please:
     - The version of the project you are testing.
     - A detailed description of the vulnerability, including steps to reproduce it.
     - Any relevant screenshots, logs, or code snippets.
-    - 
+    
 3. We will review your report, but please note that there is no guarantee that we will provide a fix or security update.
 
 4. If we choose to address the vulnerability, a patch or update may be released, but there is no defined timeline for security updates.
