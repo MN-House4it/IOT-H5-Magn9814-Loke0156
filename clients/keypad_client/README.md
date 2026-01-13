@@ -37,6 +37,7 @@ By default, keypad input is **disabled**. When a state message arrives on `keypa
 ### 3) Collects keypad input (debounced)
 The keypad is scanned as a matrix (4 rows × 4 columns). The keymap is:
 
+```text
 1 2 3 A
 4 5 6 B
 7 8 9 C
