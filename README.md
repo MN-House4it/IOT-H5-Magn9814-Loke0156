@@ -2,49 +2,76 @@
 
 Welcome to the IOT project by **Magn9814** and **Loke0156**.
 
-This repository contains an IoT solution composed of multiple client implementations, such as a door lock, keypad, and RFID reader.
+This repository contains an IoT access-control system consisting of multiple hardware clients (door lock, keypad, RFID) and a backend responsible for authentication, access logic, and MQTT communication.
 
 ---
 
 ## Repository structure
 
 ### Clients (`/clients`)
-All client-related code is located in the `clients/` folder.
+All hardware client implementations live in the `clients/` folder.
 
 Start here:
 - **Clients overview:** [`clients/README.md`](./clients/README.md)
 
-That README describes the purpose of the different client implementations:
-- **Door client** – Uses a light to represent an electronic door lock (on/off).
-- **Keypad client** – A keypad-based combination lock for a door.
-- **RFID client** – Listens for RFID tags and requests a login from the keypad.
+The clients include:
+- **Door client** – Represents a door lock using a light (locked/unlocked).
+- **Keypad client** – A keypad-based combination lock for entering a PIN.
+- **RFID client** – Reads RFID tags and initiates the login flow.
 
 ---
 
 ### Client-specific READMEs
 
-Some client folders contain their own README files with more detailed explanations and setup instructions:
+Each client has its own README with setup details and usage instructions:
 
 - **Door lock client:**  
   [`clients/doorlock_client/README.md`](./clients/doorlock_client/README.md)
 
-- **RFID client – MFRC522 I2C library:**  
-  [`clients/rfid_client/lib/MFRC522_I2C/README.md`](./clients/rfid_client/lib/MFRC522_I2C/README.md)  
-  This README explains how to use the MFRC522 RFID reader over I2C, including configuration options such as the reset pin and I2C address.
+- **Keypad client:**  
+  [`clients/keypad_client/README.md`](./clients/keypad_client/README.md)
 
-> If additional README files are added inside client folders, they should be linked from this main README to keep it as the central entry point to the project.
+- **RFID client:**  
+  [`clients/rfid_client/README.md`](./clients/rfid_client/README.md)
 
----
-
-## Getting started
-
-1. Navigate to the `clients/` folder.
-2. Read the general client overview in [`clients/README.md`](./clients/README.md).
-3. Follow the README inside the specific client folder you want to work with.
+> The root README acts as the entry point. More detailed or hardware-specific information is documented in the README closest to the code.
 
 ---
 
-## Notes
+## Backend
 
-- Some clients depend on third-party libraries included directly in the repository.
-- Always check the README closest to the code you are modifying for client-specific requirements or setup steps.
+The backend handles:
+- Access control logic
+- MQTT communication with devices
+- Database storage
+- API endpoints and health checks
+
+It is designed to run using **Docker Compose**.
+
+---
+
+## Getting the backend up and running
+
+### Prerequisites
+Make sure you have:
+- **Docker**
+- **Docker Compose**
+- **Node.js (npm)**
+
+---
+
+### Development setup
+
+1. **Install backend dependencies**
+   ```bash
+   npm run install
+
+2. **Start the backend**
+   ```bash
+   npm run dev
+
+### You can also run the seed file to seed the database with initial data like some users and keycards using the following
+   ```bash
+   npm run seed   
+
+   
