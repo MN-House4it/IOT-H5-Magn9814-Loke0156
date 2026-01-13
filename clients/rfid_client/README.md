@@ -1,6 +1,6 @@
 # rfid_client
 
-An Arduino/PlatformIO client that reads RFID/NFC tag UIDs from an MFRC522 reader over **I2C**, then publishes scans to an **MQTT broker** as JSON. It also publishes an **online status** message when it connects.
+An Arduino/PlatformIO client that reads RFID tag UIDs from an MFRC522 reader over **I2C**, then publishes scans to an **MQTT broker** as JSON. It also publishes an **online status** message when it connects.
 
 This client is intended to be part of the door-access flow where the backend listens for RFID scans and initiates the keypad/password step.
 
