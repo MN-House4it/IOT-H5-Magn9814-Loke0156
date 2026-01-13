@@ -70,8 +70,6 @@ Make sure you have:
    ```bash
    npm run dev
 
-### You can also run the seed file to seed the database with initial data like some users and keycards using the following
+**You can also run the seed file to seed the database with initial data like some users and keycards using the following**
    ```bash
-   npm run seed   
-
-   
+   npm run seed
