@@ -5,11 +5,11 @@ An Arduino/PlatformIO client that implements the **keypad step** in the RFID →
 It:
 - connects to **WiFi** and **MQTT**
 - publishes an **online** status when connected
-- listens for **state updates** from the backend (AwaitingPassword / IncorrectPassword / AccessGranted / etc.)
+- listens for **state updates** from the backend (AwaitingPassword / IncorrectKeycard / IncorrectPassword / AccessGranted)
 - reads a **4x4 matrix keypad**
 - **Base64 encodes** the entered password and publishes it to MQTT
 - drives **red/green LEDs** to guide the user (blink/glow patterns)
-- optionally reacts to **door open/close events** over MQTT
+- optionally reacts to **door open/close events** over MQTT from the doorlock client
 
 ---
 
@@ -21,14 +21,14 @@ On boot, the client:
 - initializes keypad GPIO and LED controller
 - initializes MQTT config
 - connects to WiFi
-- connects to MQTT (with optional auth)
+- connects to MQTT
 - subscribes to `keypad/state` and `doorlock/action`
-- prints “Keypad client ready”
+- prints “Keypad client ready” if it's in debug mode
 
-See startup sequence in `src/main.cpp` :contentReference[oaicite:4]{index=4} and connection/subscription behavior in `src/net_mqtt.cpp` :contentReference[oaicite:5]{index=5}.
+See startup sequence in `src/main.cpp` and connection/subscription behavior in `src/net_mqtt.cpp`.
 
 ### 2) Waits for backend to request password entry
-By default, keypad input is **disabled**. When a state message arrives on `keypad/state` for this keypad’s `deviceId`, the client updates LEDs and toggles whether input is accepted :contentReference[oaicite:6]{index=6}.
+By default, keypad input is **disabled**. When a state message arrives on `keypad/state` for this keypad’s `deviceId`, the client updates LEDs and toggles whether input is accepted.
 
 - `AwaitingPassword` → enable input + green blink
 - `IncorrectKeycard` / `IncorrectPassword` → disable input + red blink
@@ -42,17 +42,16 @@ The keypad is scanned as a matrix (4 rows × 4 columns). The keymap is:
 7 8 9 C
 0 F E D
 
-
-Pins and keymap are defined in `src/keypad.cpp` :contentReference[oaicite:7]{index=7}, with debouncing and buffer logic in `keypadLoop()` :contentReference[oaicite:8]{index=8}.
+Pins and keymap are defined in `src/keypad.cpp`, with debouncing and buffer logic in `keypadLoop()`.
 
 #### Special keys
 When input is enabled:
-- `E` = submit password :contentReference[oaicite:9]{index=9}  
-- `D` = backspace (removes last char) :contentReference[oaicite:10]{index=10}  
-- `C` = clear buffer :contentReference[oaicite:11]{index=11}  
-- `A`, `B`, `F` are ignored as control keys :contentReference[oaicite:12]{index=12}  
+- `E` = submit password
+- `D` = backspace (removes last char)  
+- `C` = clear buffer
+- `A`, `B`, `F` are ignored as control keys
 
-If the backend has not requested a password yet, key presses are ignored entirely (“Input ignored (not awaiting password)”) :contentReference[oaicite:13]{index=13}.
+If the backend has not requested a password yet, key presses are ignored entirely (“Input ignored (not awaiting password)”).
 
 ### 4) Publishes the password over MQTT (Base64 encoded)
 On submit (`E`) the client:
@@ -62,7 +61,7 @@ On submit (`E`) the client:
 - disables input until the backend responds
 - stops green blinking immediately
 
-This behavior is in `keypadSubmit()` :contentReference[oaicite:14]{index=14} and the JSON format is built in `src/payloads.cpp` :contentReference[oaicite:15]{index=15}.
+This behavior is in `keypadSubmit()` and the JSON format is built in `src/payloads.cpp`.
 
 Example payload published to `keypad/key`:
 ```json
