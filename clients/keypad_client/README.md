@@ -42,6 +42,7 @@ The keypad is scanned as a matrix (4 rows × 4 columns). The keymap is:
 4 5 6 B
 7 8 9 C
 0 F E D
+```
 
 Pins and keymap are defined in `src/keypad.cpp`, with debouncing and buffer logic in `keypadLoop()`.
 
