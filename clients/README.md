@@ -24,7 +24,7 @@ This document gives a **high-level overview of the system flow** and how the cli
   - Reports door open/close events
   - Drives a status/unlock LED (or future lock hardware)
 
-👉 See each client’s folder for detailed documentation.
+See each client’s folder for detailed documentation.
 
 ---
 
