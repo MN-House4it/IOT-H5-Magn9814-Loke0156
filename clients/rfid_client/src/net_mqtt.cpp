@@ -22,24 +22,24 @@ void NetMqtt::ensureWiFi()
   // Check if WiFi module is present
   if (WiFi.status() == WL_NO_MODULE)
   {
-    Serial.println("WiFi module not found. Check WiFiNINA module/firmware.");
+    DEBUG_PRINTLN("WiFi module not found. Check WiFiNINA module/firmware.");
   }
 
   // Initiate WiFi connection
-  Serial.print("Connecting to WiFi SSID: ");
-  Serial.println(WIFI_SSID);
+  DEBUG_PRINT("Connecting to WiFi SSID: ");
+  DEBUG_PRINTLN(WIFI_SSID);
 
   // Block until WiFi connection succeeds
   while (WiFi.begin(WIFI_SSID, WIFI_PASSWORD) != WL_CONNECTED)
   {
-    Serial.print(".");
+    DEBUG_PRINT(".");
     delay(500);
   }
 
   // Report successful connection with assigned IP
-  Serial.println();
-  Serial.print("WiFi connected. IP: ");
-  Serial.println(WiFi.localIP());
+  DEBUG_PRINTLN("");
+  DEBUG_PRINT("WiFi connected. IP: ");
+  DEBUG_PRINTLN(WiFi.localIP());
 }
 
 // Ensure MQTT connection is established and maintained
@@ -52,9 +52,9 @@ void NetMqtt::ensureMQTT(const String &clientId)
     ensureWiFi();
 
     // Attempt MQTT connection with optional authentication
-    Serial.print("Connecting to MQTT as ");
-    Serial.print(clientId);
-    Serial.print(" ... ");
+    DEBUG_PRINT("Connecting to MQTT as ");
+    DEBUG_PRINT(clientId);
+    DEBUG_PRINT(" ... ");
 
     bool ok = false;
     if (mqttHasAuth())
@@ -65,16 +65,16 @@ void NetMqtt::ensureMQTT(const String &clientId)
     // Handle connection result
     if (ok)
     {
-      Serial.println("connected!");
+      DEBUG_PRINTLN("connected!");
       // Publish online status message
       publishOnlineStatus(clientId);
     }
     else
     {
       // Retry connection after delay
-      Serial.print("failed, rc=");
-      Serial.print(_mqtt.state());
-      Serial.println(". Retrying in 2s...");
+      DEBUG_PRINT("failed, rc=");
+      DEBUG_PRINT(_mqtt.state());
+      DEBUG_PRINTLN(". Retrying in 2s...");
       delay(2000);
     }
   }
@@ -88,8 +88,8 @@ void NetMqtt::publishOnlineStatus(const String &deviceName)
   _mqtt.publish(MQTT_TOPIC_STATUS, statusPayload.c_str(), true);
 
   // Log the published status
-  Serial.print("MQTT status payload: ");
-  Serial.println(statusPayload);
+  DEBUG_PRINT("MQTT status payload: ");
+  DEBUG_PRINTLN(statusPayload);
 }
 
 // Process MQTT communication (call regularly in main loop)

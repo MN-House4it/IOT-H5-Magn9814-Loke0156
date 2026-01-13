@@ -32,7 +32,7 @@ void setup()
 
   // Initialize RFID reader
   rfid.begin();
-  Serial.println("RFID2 (I2C) ready. Tap a card/tag...");
+  DEBUG_PRINTLN("RFID2 (I2C) ready. Tap a card/tag...");
 
   // Initialize network and WiFi
   net.begin();
@@ -40,8 +40,8 @@ void setup()
 
   // Get unique device identifier
   String deviceName = getUniqueID();
-  Serial.print("Device name: ");
-  Serial.println(deviceName);
+  DEBUG_PRINT("Device name: ");
+  DEBUG_PRINTLN(deviceName);
 
   // Connect to MQTT broker
   net.ensureMQTT(deviceName);
@@ -65,10 +65,10 @@ void loop()
   }
 
   // Log the detected card information
-  Serial.print("PICC type: ");
-  Serial.println(piccType);
-  Serial.print("UID: ");
-  Serial.println(uid);
+  DEBUG_PRINT("PICC type: ");
+  DEBUG_PRINTLN(piccType);
+  DEBUG_PRINT("UID: ");
+  DEBUG_PRINTLN(uid);
 
   // Check if this is a duplicate read (same UID within deduplication window)
   const uint32_t now = millis();
@@ -83,10 +83,10 @@ void loop()
     bool ok = net.publish(MQTT_TOPIC_UID, payload, MQTT_RETAIN_UID);
 
     // Log the MQTT publication result
-    Serial.print("MQTT payload: ");
-    Serial.println(payload);
-    Serial.print("MQTT publish ");
-    Serial.println(ok ? "OK" : "FAILED");
+    DEBUG_PRINT("MQTT payload: ");
+    DEBUG_PRINTLN(payload);
+    DEBUG_PRINT("MQTT publish ");
+    DEBUG_PRINTLN(ok ? "OK" : "FAILED");
 
     // Update last read tracking
     lastUid = uid;
