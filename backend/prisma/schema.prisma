@@ -9,6 +9,11 @@ datasource db {
   extensions = [timescaledb]
 }
 
+generator dbml {
+  provider = "prisma-dbml-generator"
+}
+
+
 enum Status {
   ACTIVE
   INACTIVE

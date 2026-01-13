@@ -33,24 +33,24 @@ void ensureWiFi()
   // Check if WiFi module is present
   if (WiFi.status() == WL_NO_MODULE)
   {
-    Serial.println("WiFi module not found. Check WiFiNINA module/firmware.");
+    DEBUG_PRINTLN("WiFi module not found. Check WiFiNINA module/firmware.");
   }
 
   // Initiate WiFi connection
-  Serial.print("Connecting to WiFi SSID: ");
-  Serial.println(WIFI_SSID);
+  DEBUG_PRINT("Connecting to WiFi SSID: ");
+  DEBUG_PRINTLN(WIFI_SSID);
 
   // Block until WiFi connection succeeds
   while (WiFi.begin(WIFI_SSID, WIFI_PASSWORD) != WL_CONNECTED)
   {
-    Serial.print(".");
+    DEBUG_PRINT(".");
     delay(500);
   }
 
   // Report successful connection with assigned IP
-  Serial.println();
-  Serial.print("WiFi connected. IP: ");
-  Serial.println(WiFi.localIP());
+  DEBUG_PRINTLN("");
+  DEBUG_PRINT("WiFi connected. IP: ");
+  DEBUG_PRINTLN(WiFi.localIP());
 }
 
 // Ensure MQTT connection is established and maintained
@@ -61,9 +61,9 @@ void ensureMQTT(const String &deviceName)
   {
     ensureWiFi();
 
-    Serial.print("Connecting to MQTT as ");
-    Serial.print(deviceName);
-    Serial.print(" ... ");
+    DEBUG_PRINT("Connecting to MQTT as ");
+    DEBUG_PRINT(deviceName);
+    DEBUG_PRINT(" ... ");
 
     // Attempt MQTT connection with or without authentication
     bool ok = false;
@@ -78,7 +78,7 @@ void ensureMQTT(const String &deviceName)
 
     if (ok)
     {
-      Serial.println("connected!");
+      DEBUG_PRINTLN("connected!");
       // Publish online status with retain flag for last-will behavior
       String statusPayload = "{\"deviceId\": \"" + deviceName + "\", \"status\": \"online\"}";
       mqtt.publish(MQTT_TOPIC_STATUS, statusPayload.c_str(), true);
@@ -86,20 +86,20 @@ void ensureMQTT(const String &deviceName)
       // Subscribe to control topic for incoming commands
       if (mqtt.subscribe(MQTT_TOPIC_CONTROL))
       {
-        Serial.print("Subscribed to: ");
-        Serial.println(MQTT_TOPIC_CONTROL);
+        DEBUG_PRINT("Subscribed to: ");
+        DEBUG_PRINTLN(MQTT_TOPIC_CONTROL);
       }
       else
       {
-        Serial.println("Failed to subscribe");
+        DEBUG_PRINTLN("Failed to subscribe");
       }
     }
     else
     {
       // Log connection failure and retry
-      Serial.print("failed, rc=");
-      Serial.print(mqtt.state());
-      Serial.println(". Retrying in 2s...");
+      DEBUG_PRINT("failed, rc=");
+      DEBUG_PRINT(mqtt.state());
+      DEBUG_PRINTLN(". Retrying in 2s...");
       delay(2000);
     }
   }

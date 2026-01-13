@@ -1,6 +1,13 @@
 #pragma once
 #include <Arduino.h>
 
+// ---------------- Mode ----------------
+static const bool DEBUG_MODE = false;
+
+// Debug logging macro - only prints if DEBUG_MODE is true
+#define DEBUG_PRINTLN(msg) if (DEBUG_MODE) { Serial.println(msg); }
+#define DEBUG_PRINT(msg) if (DEBUG_MODE) { Serial.print(msg); }
+
 // ---------------- WiFi ----------------
 static const char *WIFI_SSID = "IOT-H5-Magn9814-Loke0156";
 static const char *WIFI_PASSWORD = "Pa55w.rd";
@@ -19,7 +26,7 @@ static const char *MQTT_TOPIC_STATUS = "device-status";   // Publish status
 static const char *MQTT_TOPIC_ACTION = "doorlock/action"; // Publish door action (open/close)
 
 // ---------------- Grove LED (Digital pin - on/off) ----------------
-static const uint8_t LED_PIN = A0; // LED connected to A0
+static const uint8_t LED_PIN = 8; // LED connected to pin 8
 
 // ---------------- Grove Button (Digital pin) ----------------
-static const uint8_t BUTTON_PIN = A1; // Button connected to A1
+static const uint8_t BUTTON_PIN = 4; // Button connected to pin 4

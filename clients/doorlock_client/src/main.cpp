@@ -29,13 +29,13 @@ void setup()
 
   // Get unique device identifier
   String deviceName = getUniqueID();
-  Serial.print("Device name: ");
-  Serial.println(deviceName);
+  DEBUG_PRINT("Device name: ");
+  DEBUG_PRINTLN(deviceName);
 
   // Connect to MQTT broker
   ensureMQTT(deviceName);
 
-  Serial.println("Door lock controller ready. Listening for MQTT messages...");
+  DEBUG_PRINTLN("Door lock controller ready. Listening for MQTT messages...");
 }
 
 void loop()
