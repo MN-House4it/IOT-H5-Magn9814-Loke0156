@@ -42,29 +42,28 @@ flowchart TD
 
     C -->|Invalid keycard| D[
         Publish IncorrectKeycard<br/>
-        Keypad LED: 🔴 Red Blink
+        LED: 🔴 Red Blink
     ] --> X
 
     C -->|Valid keycard| E[
         Publish AwaitingPassword<br/>
-        Keypad LED: 🟢 Green Blink
+        LED: 🟢 Green Blink
     ]
 
     E --> F[Start 30s timer]
 
     F --> G[Receive password<br/>from keypad/key]
 
-    G -->|Timeout| J[
-        Publish IncorrectPassword<br/>
-        Keypad LED: 🔴 Red Blink
-    ] --> X
+    G -->|Timeout| J
 
     G -->|Within 30s| H{Password correct?}
 
     H -->|Yes| I[
         Publish AccessGranted<br/>
-        Keypad LED: 🟢 Green Solid<br/>
-        Doorlock: Unlock
+        LED: 🟢 Green Solid
     ] --> X
 
-    H -->|No| J --> X
+    H -->|No| J[
+        Publish IncorrectPassword<br/>
+        LED: 🔴 Red Blink
+    ] --> X
