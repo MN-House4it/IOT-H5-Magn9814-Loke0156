@@ -26,13 +26,13 @@ void setup()
 
   // Obtain unique device identifier
   String deviceName = getUniqueID();
-  Serial.print("Device ID: ");
-  Serial.println(deviceName);
+  DEBUG_PRINT("Device ID: ");
+  DEBUG_PRINTLN(deviceName);
 
   // Establish MQTT connection and subscriptions
   ensureMQTT(deviceName);
 
-  Serial.println("Keypad client ready");
+  DEBUG_PRINTLN("Keypad client ready");
 }
 
 // Arduino main loop — runs continuously

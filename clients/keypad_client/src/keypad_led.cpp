@@ -119,7 +119,7 @@ void keypadLedLoop()
     {
       if (redLed.mode != LED_GLOWING)
       {
-        Serial.println("Door not closed within 15s! Red LED ON");
+        DEBUG_PRINTLN("Door not closed within 15s! Red LED ON");
         keypadLedRedGlow(LED_GLOW_DURATION_MS);
       }
     }
@@ -135,7 +135,7 @@ void keypadLedHandleMqtt(char *topic, byte *payload, unsigned int length)
     StaticJsonDocument<128> doc;
     if (deserializeJson(doc, payload, length))
     {
-      Serial.println("Invalid JSON on doorlock/action");
+      DEBUG_PRINTLN("Invalid JSON on doorlock/action");
       return;
     }
 
@@ -147,13 +147,13 @@ void keypadLedHandleMqtt(char *topic, byte *payload, unsigned int length)
 
     if (action == "open")
     {
-      Serial.println("Door open received");
+      DEBUG_PRINTLN("Door open received");
       doorOpenTimestamp = millis();
       doorOpenActive = true;
     }
     else if (action == "close")
     {
-      Serial.println("Door close received");
+      DEBUG_PRINTLN("Door close received");
       doorOpenActive = false;
       keypadLedRedOff();
     }
@@ -168,7 +168,7 @@ void keypadLedHandleMqtt(char *topic, byte *payload, unsigned int length)
   StaticJsonDocument<256> doc;
   if (deserializeJson(doc, payload, length))
   {
-    Serial.println("Invalid JSON received");
+    DEBUG_PRINTLN("Invalid JSON received");
     return;
   }
 
@@ -180,8 +180,8 @@ void keypadLedHandleMqtt(char *topic, byte *payload, unsigned int length)
   if (incomingId != deviceName)
     return;
 
-  Serial.print("State received: ");
-  Serial.println(state);
+  DEBUG_PRINT("State received: ");
+  DEBUG_PRINTLN(state);
 
   if (state == "IncorrectKeycard" || state == "IncorrectPassword")
   {
@@ -194,7 +194,7 @@ void keypadLedHandleMqtt(char *topic, byte *payload, unsigned int length)
     keypadLedGreenBlink(timeMs);
     keypadSetInputEnabled(true);
     keypadClearBuffer();
-    Serial.println("Keypad input ENABLED");
+    DEBUG_PRINTLN("Keypad input ENABLED");
   }
   else if (state == "AccessGranted")
   {

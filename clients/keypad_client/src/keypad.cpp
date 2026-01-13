@@ -122,7 +122,7 @@ void keypadLoop()
       // Ignore input if not awaiting password
       if (!inputEnabled)
       {
-        Serial.println("Input ignored (not awaiting password)");
+        DEBUG_PRINTLN("Input ignored (not awaiting password)");
         return;
       }
 
@@ -144,14 +144,14 @@ void keypadLoop()
         // Ignore non-numeric control keys
         if (k == 'A' || k == 'B' || k == 'F')
         {
-          Serial.print("Key ignored: ");
-          Serial.println(k);
+          DEBUG_PRINT("Key ignored: ");
+          DEBUG_PRINTLN(k);
         }
         else
         {
           keyBuffer += k;
-          Serial.print("Buffer: ");
-          Serial.println(keyBuffer);
+          DEBUG_PRINT("Buffer: ");
+          DEBUG_PRINTLN(keyBuffer);
         }
       }
     }
@@ -194,10 +194,10 @@ void keypadSubmit()
         buildKeyJson(deviceName, encodedPassword).c_str(),
         true);
 
-    Serial.print("Encoded password sent: ");
-    Serial.println(encodedPassword);
+    DEBUG_PRINT("Encoded password sent: ");
+    DEBUG_PRINTLN(encodedPassword);
 
-    Serial.println("Password submitted, waiting for server response");
+    DEBUG_PRINTLN("Password submitted, waiting for server response");
 
     // Stop green LED blinking immediately
     keypadLedGreenOff();

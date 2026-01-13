@@ -2,7 +2,11 @@
 #include <Arduino.h>
 
 // ---------------- Mode ----------------
-static const bool TEST_MODE = false;
+static const bool DEBUG_MODE = false;
+
+// Debug logging macro - only prints if DEBUG_MODE is true
+#define DEBUG_PRINTLN(msg) if (DEBUG_MODE) { Serial.println(msg); }
+#define DEBUG_PRINT(msg) if (DEBUG_MODE) { Serial.print(msg); }
 
 // ---------------- WiFi ----------------
 static const char *WIFI_SSID = "IOT-H5-Magn9814-Loke0156";
