@@ -19,7 +19,7 @@ Before you begin, ensure you have the following installed:
 ## Repository Structure
 
 ### Clients (`/clients`)
-All hardware client implementations live in the `clients/` folder.
+All the software for the clients live in the `clients/` folder.
 
 Start here:  
 - **Clients overview:** [`clients/README.md`](./clients/README.md)
@@ -42,14 +42,14 @@ Each client has its own README with setup and usage instructions:
 - **RFID client:**  
   [`clients/rfid_client/README.md`](./clients/rfid_client/README.md)
 
-> The root README is the entry point. Hardware- or client-specific details live closest to the code.
+> The root README is the entry point. Software or client-specific details live closest to the code.
 
 ---
 
 ## Backend
 
 The backend handles:
-- Authentication & access-control logic
+- Access-control logic
 - MQTT communication with devices
 - Database storage
 - API endpoints and health checks
@@ -85,7 +85,7 @@ npm run install
 
 ---
 
-### 4. Start the backend (development)
+### 4. Start the backend
 
 Run the backend using Docker Compose:
 
@@ -109,4 +109,4 @@ npm run seed
 
 - If Docker containers fail to start due to timing or startup issues, wait a few seconds and try again.
 - Ensure Docker Desktop is running before starting the backend.
-- Always check the client-specific READMEs for hardware setup, wiring, and device requirements.
+- Always check the client-specific READMEs for software details.
