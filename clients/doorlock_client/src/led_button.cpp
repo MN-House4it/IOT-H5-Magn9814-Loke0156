@@ -36,7 +36,7 @@ void handleButtonPress()
   // Detect button press transition (not pressed -> pressed)
   if (buttonCurrentlyPressed && !buttonPressed)
   {
-    Serial.println("Button pressed - publishing 'close' to door/action");
+    DEBUG_PRINTLN("Button pressed - publishing 'close' to door/action");
     String payload = buildDoorActionJson(deviceName, "close");
     mqttPublish(MQTT_TOPIC_ACTION, payload.c_str(), false);
     doorActionActive = true;
@@ -45,7 +45,7 @@ void handleButtonPress()
   // Detect button release transition (pressed -> not pressed)
   else if (!buttonCurrentlyPressed && buttonPressed)
   {
-    Serial.println("Button released - publishing 'open' to door/action");
+    DEBUG_PRINTLN("Button released - publishing 'open' to door/action");
     String payload = buildDoorActionJson(deviceName, "open");
     mqttPublish(MQTT_TOPIC_ACTION, payload.c_str(), false);
     doorActionActive = false;
@@ -58,8 +58,8 @@ void ledHandleMqtt(char *topic, byte *payload, unsigned int length)
 {
   String deviceName = getUniqueID();
 
-  Serial.print("MQTT message received on topic: ");
-  Serial.println(topic);
+  DEBUG_PRINT("MQTT message received on topic: ");
+  DEBUG_PRINTLN(topic);
 
   // Parse JSON payload
   StaticJsonDocument<200> doc;
@@ -67,15 +67,15 @@ void ledHandleMqtt(char *topic, byte *payload, unsigned int length)
 
   if (error)
   {
-    Serial.print("JSON parse error: ");
-    Serial.println(error.c_str());
+    DEBUG_PRINT("JSON parse error: ");
+    DEBUG_PRINTLN(error.c_str());
     return;
   }
 
   // Validate required fields
   if (!doc.containsKey("deviceId") || !doc.containsKey("time"))
   {
-    Serial.println("Missing required fields: deviceId, time");
+    DEBUG_PRINTLN("Missing required fields: deviceId, time");
     return;
   }
 
@@ -83,25 +83,25 @@ void ledHandleMqtt(char *topic, byte *payload, unsigned int length)
   String incomingDeviceId = doc["deviceId"].as<String>();
   uint32_t durationMs = doc["time"].as<uint32_t>();
 
-  Serial.print("Incoming deviceId: ");
-  Serial.println(incomingDeviceId);
-  Serial.print("Duration (ms): ");
-  Serial.println(durationMs);
+  DEBUG_PRINT("Incoming deviceId: ");
+  DEBUG_PRINTLN(incomingDeviceId);
+  DEBUG_PRINT("Duration (ms): ");
+  DEBUG_PRINTLN(durationMs);
 
   // Check if message is intended for this device
   if (incomingDeviceId == deviceName)
   {
-    Serial.println("Device ID match! Turning on LED...");
+    DEBUG_PRINTLN("Device ID match! Turning on LED...");
     setLED(true);
     ledActive = true;
     ledEndTimeMs = millis() + durationMs;
   }
   else
   {
-    Serial.print("Device ID mismatch. Expected: ");
-    Serial.print(deviceName);
-    Serial.print(", got: ");
-    Serial.println(incomingDeviceId);
+    DEBUG_PRINT("Device ID mismatch. Expected: ");
+    DEBUG_PRINT(deviceName);
+    DEBUG_PRINT(", got: ");
+    DEBUG_PRINTLN(incomingDeviceId);
   }
 }
 
@@ -114,7 +114,7 @@ void ledLoop()
     uint32_t now = millis();
     if (now >= ledEndTimeMs)
     {
-      Serial.println("LED timeout reached. Turning off...");
+      DEBUG_PRINTLN("LED timeout reached. Turning off...");
       turnOffLED();
     }
   }
