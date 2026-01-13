@@ -26,7 +26,7 @@ static const char *MQTT_TOPIC_STATUS = "device-status";   // Publish status
 static const char *MQTT_TOPIC_ACTION = "doorlock/action"; // Publish door action (open/close)
 
 // ---------------- Grove LED (Digital pin - on/off) ----------------
-static const uint8_t LED_PIN = A0; // LED connected to A0
+static const uint8_t LED_PIN = 8; // LED connected to pin 8
 
 // ---------------- Grove Button (Digital pin) ----------------
-static const uint8_t BUTTON_PIN = A1; // Button connected to A1
+static const uint8_t BUTTON_PIN = 4; // Button connected to pin 4
