@@ -62,7 +62,7 @@ app.listen(config.PORT, () => {
   });
 
   client.on('connect', () => {
-  console.info('✅ Connected to MQTT Broker');
+  console.info('Connected to MQTT Broker');
 
   // Build status message using model
   const statusMessage: DeviceStatusMessage = {
@@ -77,7 +77,7 @@ app.listen(config.PORT, () => {
       { qos: 1, retain: true },
       (err) => {
         if (err) {
-          console.error('❌ Failed to publish status:', err);
+          console.error('Failed to publish status:', err);
         } else {
           console.info('📡 Server status published: ONLINE');
         }
@@ -87,18 +87,18 @@ app.listen(config.PORT, () => {
     // Subscribe to RFID key topic
     client.subscribe(config.MQTT_RFID_KEY_TOPIC, (err) => {
       if (err) {
-        console.error('❌ MQTT RFID Key Subscription Error:', err);
+        console.error('MQTT RFID Key Subscription Error:', err);
       } else {
-        console.info('🔑 Subscribed to RFID key topic:', config.MQTT_RFID_KEY_TOPIC);
+        console.info('Subscribed to RFID key topic:', config.MQTT_RFID_KEY_TOPIC);
       }
     });
 
     // Subscribe to keypad password topic
     client.subscribe(config.MQTT_KEYPAD_PASSWORD_TOPIC, (err) => {
       if (err) {
-        console.error('❌ MQTT Keypad Password Subscription Error:', err);
+        console.error('MQTT Keypad Password Subscription Error:', err);
       } else {
-        console.info('🔐 Subscribed to keypad password topic:', config.MQTT_KEYPAD_PASSWORD_TOPIC);
+        console.info('Subscribed to keypad password topic:', config.MQTT_KEYPAD_PASSWORD_TOPIC);
       }
     });
   });
@@ -112,19 +112,19 @@ app.listen(config.PORT, () => {
 
       try {
         const rfidMessage: RfidKeyMessage = JSON.parse(payload);
-        console.info('✅ Parsed RFID payload:', rfidMessage);
+        console.info('Parsed RFID payload:', rfidMessage);
         
         // Process the RFID scan through the access control flow
         processRfidScan(rfidMessage.rfidUid, rfidMessage.deviceId, client).catch((err) => {
           console.error('Error in processRfidScan:', err);
         });
       } catch (err) {
-        console.warn('⚠️ Failed to parse RFID payload as JSON:', err);
+        console.warn('Failed to parse RFID payload as JSON:', err);
       }
     } else if (topic === config.MQTT_KEYPAD_PASSWORD_TOPIC) {
       const payload = message.toString();
 
-      console.info('📥 Keypad password message received');
+      console.info('Keypad password message received');
 
       try {
         const passwordMessage: PasswordMessage = JSON.parse(payload);
@@ -134,25 +134,25 @@ app.listen(config.PORT, () => {
           console.error('Error in processPasswordInput:', err);
         });
       } catch (err) {
-        console.warn('⚠️ Failed to parse password payload as JSON:', err);
+        console.warn('Failed to parse password payload as JSON:', err);
       }
     }
   });
 
   client.on('error', (err) => {
-    console.error('❌ MQTT Client Error:', err);
+    console.error('MQTT Client Error:', err);
   });
 
   // Handle graceful shutdown
   process.on('SIGINT', () => {
-    console.info('🛑 Shutting down gracefully...');
+    console.info('Shutting down gracefully...');
     cleanupAllSessions();
     client.end();
     process.exit(0);
   });
 
   process.on('SIGTERM', () => {
-    console.info('🛑 Shutting down gracefully...');
+    console.info('Shutting down gracefully...');
     cleanupAllSessions();
     client.end();
     process.exit(0);

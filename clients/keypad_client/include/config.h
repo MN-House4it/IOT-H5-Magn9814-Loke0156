@@ -42,4 +42,4 @@ static const uint32_t LED_GLOW_DURATION_MS = 5000;
 static const uint32_t KEYPAD_DEBOUNCE_MS = 40;
 
 // ---------------- Door device ----------------
-static const char *DOOR_DEVICE_ID = "304242375241C9033432"; // Replace with your door's ID
+static const char *DOOR_DEVICE_ID = "304242375241C9033432";
