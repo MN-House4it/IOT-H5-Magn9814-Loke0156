@@ -91,17 +91,10 @@ void ledHandleMqtt(char *topic, byte *payload, unsigned int length)
   // Check if message is intended for this device
   if (incomingDeviceId == deviceName)
   {
-    DEBUG_PRINTLN("Device ID match! Turning on LED...");
+    DEBUG_PRINTLN("Device ID match! unlocking door");
     setLED(true);
     ledActive = true;
     ledEndTimeMs = millis() + durationMs;
-  }
-  else
-  {
-    DEBUG_PRINT("Device ID mismatch. Expected: ");
-    DEBUG_PRINT(deviceName);
-    DEBUG_PRINT(", got: ");
-    DEBUG_PRINTLN(incomingDeviceId);
   }
 }
 
