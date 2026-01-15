@@ -5,6 +5,9 @@
 #include "payloads.h"
 #include "led_button.h"
 
+// Cached unique device identifier
+static String deviceName;
+
 void setup()
 {
   // Initialize serial communication for debugging
@@ -28,7 +31,7 @@ void setup()
   ensureWiFi();
 
   // Get unique device identifier
-  String deviceName = getUniqueID();
+  deviceName = getUniqueID();
   DEBUG_PRINT("Device name: ");
   DEBUG_PRINTLN(deviceName);
 
@@ -40,9 +43,6 @@ void setup()
 
 void loop()
 {
-  // Get the device identifier for MQTT messages
-  String deviceName = getUniqueID();
-
   // Maintain MQTT connection and process incoming messages
   ensureMQTT(deviceName);
   mqttLoop();

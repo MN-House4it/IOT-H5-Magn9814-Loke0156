@@ -33,4 +33,7 @@ private:
 
   // Publish device online status to MQTT
   void publishOnlineStatus(const String &deviceName);
+
+  // Check if MQTT authentication is configured
+  bool mqttHasAuth();
 };

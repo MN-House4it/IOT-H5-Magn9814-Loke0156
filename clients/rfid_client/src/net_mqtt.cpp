@@ -103,3 +103,9 @@ bool NetMqtt::publish(const char *topic, const String &payload, bool retain)
 {
   return _mqtt.publish(topic, payload.c_str(), retain);
 }
+
+// Check if MQTT authentication credentials are configured
+bool NetMqtt::mqttHasAuth()
+{
+  return MQTT_USER && MQTT_USER[0] != '\0';
+}
