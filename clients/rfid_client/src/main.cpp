@@ -64,7 +64,7 @@ void loop()
     return;
   }
 
-  // Log the detected card information
+  // Log the detected card information to the serial console
   DEBUG_PRINT("PICC type: ");
   DEBUG_PRINTLN(piccType);
   DEBUG_PRINT("UID: ");
