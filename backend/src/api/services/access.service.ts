@@ -57,11 +57,11 @@ export async function processRfidScan(
     });
 
     if (!door) {
-      console.warn(`⚠️ Door not found for RFID device: ${rfidDeviceId}`);
+      console.warn(`Door not found for RFID device: ${rfidDeviceId}`);
       return;
     }
 
-    console.info(`✅ Door found: ${door.id}`);
+    console.info(`Door found: ${door.id}`);
 
     // Step 2: Validate keycard - find matching keycard by RFID UID
     const userKeycard = door.accessGrants.find(
@@ -69,7 +69,7 @@ export async function processRfidScan(
     )?.userKeycard;
 
     if (!userKeycard) {
-      console.warn(`❌ Invalid keycard: ${rfidUid}`);
+      console.warn(`Invalid keycard: ${rfidUid}`);
       publishMessage(
         client,
         door.keypadDeviceId,
@@ -86,7 +86,7 @@ export async function processRfidScan(
       return;
     }
 
-    console.info(`✅ Valid keycard found: ${rfidUid}`);
+    console.info(`Valid keycard found: ${rfidUid}`);
 
     // Log valid keycard attempt
     await logAccessAttempt({
@@ -105,7 +105,7 @@ export async function processRfidScan(
 
     // Step 4: Create pending session and start timer
     const timeoutHandle = setTimeout(() => {
-      console.warn(`⏱️ Session timeout for door: ${door.id}`);
+      console.warn(`Session timeout for door: ${door.id}`);
       publishMessage(client, door.keypadDeviceId, 'IncorrectPassword', STATE_TIMES.IncorrectPassword);
       pendingSessions.delete(door.id);
     }, SESSION_TIMEOUT_MS);
@@ -122,10 +122,10 @@ export async function processRfidScan(
 
     pendingSessions.set(door.id, session);
 
-    console.info(`⏰ Session created - waiting for password (30s timeout)`);
+    console.info(`Session created - waiting for password (30s timeout)`);
     publishMessage(client, door.keypadDeviceId, 'AwaitingPassword', STATE_TIMES.AwaitingPassword);
   } catch (error) {
-    console.error('❌ Error processing RFID scan:', error);
+    console.error('Error processing RFID scan:', error);
   }
 }
 
@@ -151,21 +151,21 @@ export async function processPasswordInput(
     });
 
     if (!door) {
-      console.warn(`⚠️ Door not found for keypad device: ${keypadDeviceId}`);
+      console.warn(`Door not found for keypad device: ${keypadDeviceId}`);
       return;
     }
 
     const session = pendingSessions.get(door.id);
 
     if (!session) {
-      console.warn(`⚠️ No active session for door: ${door.id}`);
+      console.warn(`No active session for door: ${door.id}`);
       publishMessage(client, keypadDeviceId, 'IncorrectPassword', STATE_TIMES.IncorrectPassword);
       return;
     }
 
     // Check if session has timed out
     if (Date.now() > session.expiresAt) {
-      console.warn(`⏱️ Session expired for door: ${door.id}`);
+      console.warn(`Session expired for door: ${door.id}`);
       clearTimeout(session.timeoutHandle);
       pendingSessions.delete(door.id);
       publishMessage(client, keypadDeviceId, 'IncorrectPassword', STATE_TIMES.IncorrectPassword);
@@ -186,7 +186,7 @@ export async function processPasswordInput(
     try {
       decodedPassword = Buffer.from(password, 'base64').toString('utf-8');
     } catch (err) {
-      console.error(`❌ Failed to decode base64 password:`, err);
+      console.error(`Failed to decode base64 password:`, err);
       publishMessage(client, keypadDeviceId, 'IncorrectPassword', STATE_TIMES.IncorrectPassword);
       return;
     }
@@ -196,7 +196,7 @@ export async function processPasswordInput(
       const isPasswordValid = await argon2.verify(session.keycardPassword, decodedPassword);
       
       if (isPasswordValid) {
-        console.info(`✅ Password correct for door: ${door.id}`);
+        console.info(`Password correct for door: ${door.id}`);
         clearTimeout(session.timeoutHandle);
         pendingSessions.delete(door.id);
         publishMessage(client, keypadDeviceId, 'AccessGranted', STATE_TIMES.AccessGranted);
@@ -229,7 +229,7 @@ export async function processPasswordInput(
         return;
       }
 
-      console.warn(`❌ Incorrect password for door: ${door.id}`);
+      console.warn(`Incorrect password for door: ${door.id}`);
       publishMessage(client, keypadDeviceId, 'IncorrectPassword', STATE_TIMES.IncorrectPassword);
       
       // Log incorrect password attempt
@@ -241,7 +241,7 @@ export async function processPasswordInput(
         details: 'Password verification failed',
       });
     } catch (err) {
-      console.error(`❌ Error verifying password with argon2:`, err);
+      console.error(`Error verifying password with argon2:`, err);
       publishMessage(client, keypadDeviceId, 'IncorrectPassword', STATE_TIMES.IncorrectPassword);
       
       // Log password verification error
@@ -254,7 +254,7 @@ export async function processPasswordInput(
       });
     }
   } catch (error) {
-    console.error('❌ Error processing password:', error);
+    console.error('Error processing password:', error);
   }
 }
 
@@ -272,7 +272,7 @@ function publishMessage(
 
   client.publish(topic, payload, { qos: 1 }, (err) => {
     if (err) {
-      console.error(`❌ Failed to publish to ${topic}:`, err);
+      console.error(`Failed to publish to ${topic}:`, err);
     } else {
       console.info(`📡 Published ${state} to ${topic}`);
     }
@@ -292,9 +292,9 @@ function triggerDoorUnlock(
 
   client.publish(topic, payload, { qos: 1 }, (err) => {
     if (err) {
-      console.error(`❌ Failed to publish door unlock to ${topic}:`, err);
+      console.error(`Failed to publish door unlock to ${topic}:`, err);
     } else {
-      console.info(`🔓 Door unlock command sent to ${topic} for device ${doorlockDeviceId}`);
+      console.info(`Door unlock command sent to ${topic} for device ${doorlockDeviceId}`);
     }
   });
 }
@@ -305,7 +305,7 @@ function triggerDoorUnlock(
 export function cleanupAllSessions(): void {
   for (const [doorId, session] of pendingSessions) {
     clearTimeout(session.timeoutHandle);
-    console.info(`🧹 Cleaned up session for door: ${doorId}`);
+    console.info(`Cleaned up session for door: ${doorId}`);
   }
   pendingSessions.clear();
 }
@@ -326,9 +326,9 @@ export async function logAccessAttempt(data: IAccessLogData): Promise<void> {
       },
     });
 
-    console.info(`📝 Access logged for door ${data.doorId} - Status: ${data.accessStatus}`);
+    console.info(`Access logged for door ${data.doorId} - Status: ${data.accessStatus}`);
   } catch (error) {
-    console.error('❌ Error logging access attempt:', error);
+    console.error('Error logging access attempt:', error);
     // Don't throw - logging failures shouldn't block the access flow
   }
 }
