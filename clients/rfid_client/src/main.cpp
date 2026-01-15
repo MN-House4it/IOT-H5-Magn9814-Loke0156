@@ -12,6 +12,8 @@ static RfidReader rfid(RFID_I2C_ADDR, -1);
 // MQTT network handler
 static NetMqtt net;
 
+// Cached unique device identifier
+static String deviceName;
 // Tracks the last read UID to detect duplicate reads
 static String lastUid;
 // Tracks when the last UID was published to the MQTT broker
@@ -38,8 +40,8 @@ void setup()
   net.begin();
   net.ensureWiFi();
 
-  // Get unique device identifier
-  String deviceName = getUniqueID();
+  // Get and cache unique device identifier
+  deviceName = getUniqueID();
   DEBUG_PRINT("Device name: ");
   DEBUG_PRINTLN(deviceName);
 
@@ -49,9 +51,6 @@ void setup()
 
 void loop()
 {
-  // Get the device identifier for MQTT messages
-  const String deviceName = getUniqueID();
-
   // Maintain MQTT connection and process incoming messages
   net.ensureMQTT(deviceName);
   net.loop();
