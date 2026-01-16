@@ -23,6 +23,7 @@ static const char *MQTT_PASS = "Admin1234!";
 // ---------------- Topics ----------------
 static const char *MQTT_TOPIC_KEY = "keypad/key";
 static const char *MQTT_TOPIC_STATE = "keypad/state";
+static const char *MQTT_TOPIC_ACTION = "doorlock/action";
 static const char *MQTT_TOPIC_STATUS = "device-status";
 
 // ---------------- Keypad pins ----------------

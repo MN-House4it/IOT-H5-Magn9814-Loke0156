@@ -130,7 +130,7 @@ void keypadLedLoop()
 void keypadLedHandleMqtt(char *topic, byte *payload, unsigned int length)
 {
   // --- Door lock action handling ---
-  if (String(topic) == "doorlock/action")
+  if (String(topic) == MQTT_TOPIC_ACTION)
   {
     StaticJsonDocument<128> doc;
     if (deserializeJson(doc, payload, length))
